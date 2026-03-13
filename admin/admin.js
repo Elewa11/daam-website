@@ -8,7 +8,7 @@ const CONFIG = {
     branch: 'main',
     password: 'admin123',
     // Pre-configured access key (obfuscated)
-    _tk: 'Vnd3Y1AxVUNUNkY3bm9ROW1IV0hQbk9YY05DZFJESGdTT0V1X3BoZw==',
+    _tk: 'VXNTWnoxazkzNFUzZEdPZWlRcFdqdUU5Wm56ZkFIVlFVZlVWX3BoZw==',
 };
 
 let state = {
