@@ -4,13 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم مؤسسة دعم — محرر المحتوى</title>
+    <title>لوحة تحكم مؤسسة دعم — محرر الموقع</title>
     <meta name="robots" content="noindex, nofollow">
-    <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;600;700;800&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;600;700&display=swap">
     <link rel="stylesheet" href="admin.css">
-
-    <!-- Favicon -->
     <link rel="icon" type="image/png" href="../assets/images/favicon.png">
 </head>
 
@@ -22,25 +19,23 @@
             <div class="login-logo">
                 <img src="../assets/images/logo_header.png" alt="Daam Foundation" height="70" style="filter: brightness(0) invert(1);">
             </div>
-            <h1 class="login-title">محرر المحتوى</h1>
-            <p class="login-subtitle">تعديل محتوى الموقع بسهولة ويسر</p>
+            <h1 class="login-title">محرر الموقع المباشر</h1>
+            <p class="login-subtitle">تعديل محتوى الموقع وتصفحه بسهولة</p>
 
             <div class="login-form">
                 <div class="input-group">
                     <label for="adminPassword">كلمة المرور</label>
-                    <input type="password" id="adminPassword" placeholder="أدخل كلمة المرور"
-                        autocomplete="current-password">
+                    <input type="password" id="adminPassword" placeholder="أدخل كلمة المرور" autocomplete="current-password">
                 </div>
                 <button id="loginBtn" class="btn-login" onclick="handleLogin()">
                     <span class="btn-text">تسجيل الدخول</span>
                     <span class="btn-loader" style="display:none"></span>
                 </button>
-                <p id="loginError" class="login-error" style="display:none">كلمة المرور غير صحيحة. حاول مرة أخرى.</p>
+                <p id="loginError" class="login-error" style="display:none">كلمة المرور غير صحيحة.</p>
             </div>
 
             <div id="setupSection" class="setup-section" style="display:none">
-                <div class="setup-divider"><span>الإعداد لأول مرة</span></div>
-                <p class="setup-desc">أدخل رمز الوصول الخاص بـ GitHub لتفعيل الحفظ:</p>
+                <div class="setup-divider"><span>إعدادات النشر</span></div>
                 <div class="input-group">
                     <label for="githubToken">GitHub Token</label>
                     <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxx">
@@ -50,92 +45,41 @@
         </div>
     </div>
 
-    <!-- ============ MAIN DASHBOARD ============ -->
-    <div id="dashboard" class="dashboard" style="display:none">
-        <!-- Top Bar -->
-        <header class="admin-header">
-            <div class="admin-header-left">
-                <img src="../assets/images/logo_header.png" alt="Daam Foundation" height="40" style="filter: brightness(0) invert(1);">
-                <span class="admin-header-title">محرر المحتوى</span>
-            </div>
-            <div class="admin-header-right">
-                <span id="statusIndicator" class="status-indicator">
-                    <span class="status-dot status-dot-ok"></span>
-                    متصل
-                </span>
-                <button class="btn-logout" onclick="handleLogout()">خروج</button>
-            </div>
-        </header>
-
-        <!-- Page Selection View -->
-        <div id="pageListView" class="page-list-view">
-            <div class="page-list-header">
-                <h2>اختر صفحة لتعديلها</h2>
-                <p>اضغط على أي صفحة أدناه لبدء تعديل محتواها</p>
+    <!-- ============ FULL SCREEN EDITOR ============ -->
+    <div id="editorView" class="editor-view" style="display:none;">
+        
+        <!-- Floating Toolbar -->
+        <div class="floating-toolbar">
+            <div class="toolbar-left">
+                <img src="../assets/images/logo_header.png" alt="Daam" height="30" style="filter: brightness(0) invert(1); margin-left: 15px;">
+                <span class="page-indicator">الصفحة الحالية: <span id="currentPageLabel">index.html</span></span>
             </div>
 
-            <div class="page-tabs">
-                <button class="page-tab active" data-lang="ar" onclick="filterPages('ar')">صفحات اللغة العربية</button>
-                <button class="page-tab" data-lang="en" onclick="filterPages('en')">English Pages</button>
-            </div>
-
-            <div id="pageGrid" class="page-grid">
-                <!-- Pages are populated by JS -->
-            </div>
-        </div>
-
-        <!-- Editor View -->
-        <div id="editorView" class="editor-view" style="display:none">
-            <div class="editor-toolbar">
-                <button class="btn-back" onclick="closeEditor()">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="9 18 15 12 9 6"></polyline>
-                    </svg>
-                    العودة للصفحات
-                </button>
-                <span id="editorPageName" class="editor-page-name">index.html</span>
-                <div class="editor-actions">
-                    <span id="changeCounter" class="change-counter" style="display:none">0 تغييرات</span>
-                    <button id="btnUndo" class="btn-editor btn-undo" onclick="undoChanges()" style="display:none">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <polyline points="1 4 1 10 7 10"></polyline>
-                            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
-                        </svg>
-                        تراجع للكل
-                    </button>
-                    <button id="btnSave" class="btn-editor btn-save" onclick="saveChanges()" disabled>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                            <polyline points="7 3 7 8 15 8"></polyline>
-                        </svg>
-                        نشر التعديلات
-                    </button>
+            <div class="toolbar-center">
+                <!-- Toggle Switch -->
+                <div class="mode-toggle">
+                    <span class="mode-label" id="browseLabel">تصفح</span>
+                    <label class="switch">
+                        <input type="checkbox" id="modeSwitch" onchange="toggleMode()">
+                        <span class="slider round"></span>
+                    </label>
+                    <span class="mode-label active-mode" id="editLabel">تعديل</span>
                 </div>
             </div>
 
-            <div class="editor-hint">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="16" x2="12" y2="12"></line>
-                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                </svg>
-                <span><strong>اضغط على أي نص</strong> لتعديله. <strong>اضغط على أي صورة</strong> لاستبدالها. عند الانتهاء، اضغط على <strong>"نشر التعديلات"</strong>.</span>
-            </div>
-
-            <div class="editor-frame-wrapper">
-                <iframe id="editorFrame" class="editor-frame"
-                    sandbox="allow-same-origin allow-forms allow-modals"></iframe>
+            <div class="toolbar-right">
+                <span id="changeCounter" class="change-counter" style="display:none">0 تعديلات</span>
+                <button id="btnSave" class="btn-save" onclick="saveChanges()" disabled>نشر التعديلات</button>
+                <button class="btn-logout-small" onclick="handleLogout()" title="تسجيل الخروج">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                </button>
             </div>
         </div>
-    </div>
 
-    <!-- Toast Notification -->
-    <div id="toast" class="toast" style="display:none">
-        <span id="toastIcon" class="toast-icon"></span>
-        <span id="toastMessage" class="toast-message"></span>
+        <!-- Iframe container takes full space beneath toolbar -->
+        <div class="iframe-container">
+            <iframe id="editorFrame" class="editor-frame" sandbox="allow-same-origin allow-scripts allow-forms allow-modals"></iframe>
+        </div>
     </div>
 
     <!-- Image Upload Modal -->
@@ -147,29 +91,28 @@
                 <img id="modalPreview" src="" alt="Preview">
             </div>
             <div class="modal-upload-area" id="dropZone">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="17 8 12 3 7 8"></polyline>
-                    <line x1="12" y1="3" x2="12" y2="15"></line>
-                </svg>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                 <p>اسحب الصورة هنا، أو <strong>اضغط للتصفح</strong></p>
                 <input type="file" id="imageInput" accept="image/*" style="display:none">
             </div>
             <div class="modal-actions">
                 <button class="btn-modal btn-modal-cancel" onclick="closeImageModal()">إلغاء</button>
-                <button class="btn-modal btn-modal-confirm" id="btnConfirmImage" onclick="confirmImageReplace()"
-                    disabled>استخدم هذه الصورة</button>
+                <button class="btn-modal btn-modal-confirm" id="btnConfirmImage" onclick="confirmImageReplace()" disabled>استخدم هذه الصورة</button>
             </div>
         </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast" style="display:none">
+        <span id="toastMessage" class="toast-message"></span>
     </div>
 
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="loading-overlay" style="display:none">
         <div class="loading-spinner"></div>
-        <p id="loadingText">جاري نشر التعديلات...</p>
+        <p id="loadingText">جاري المعالجة...</p>
     </div>
 
     <script src="admin.js"></script>
 </body>
-
 </html>

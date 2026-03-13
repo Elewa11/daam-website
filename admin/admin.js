@@ -1,43 +1,21 @@
 /* ============================================
-   DAAM FOUNDATION — Content Editor (Admin CMS)
-   No backend required. Uses GitHub API directly.
+   DAAM FOUNDATION — Inline Content Editor (Admin CMS)
    ============================================ */
 
-// ─── Configuration ───
 const CONFIG = {
     owner: 'Elewa11',
     repo: 'daam-website',
     branch: 'main',
-    // SHA-256 hash of the admin password: 'admin123'
     passwordHash: '90230ee1405515aa19246cbc88f1754a49ac5a3bb2968dfe00778ea452bdc229',
-    _tk: null,
-    pages: {
-        ar: [
-            { title: 'الصفحة الرئيسية', file: 'index.html', icon: '🏠' },
-            { title: 'من نحن', file: 'about.html', icon: '🏛️' },
-            { title: 'برامجنا', file: 'programs.html', icon: '⚙️' },
-            { title: 'شارك معنا', file: 'participate.html', icon: '🤝' },
-            { title: 'تواصل معنا', file: 'contact.html', icon: '✉️' },
-        ],
-        en: [
-            { title: 'Home Page', file: 'en/index.html', icon: '🏠' },
-            { title: 'About Us', file: 'en/about.html', icon: '🏛️' },
-            { title: 'Our Programs', file: 'en/programs.html', icon: '⚙️' },
-            { title: 'Participate', file: 'en/participate.html', icon: '🤝' },
-            { title: 'Contact Us', file: 'en/contact.html', icon: '✉️' },
-        ]
-    }
 };
 
-// ─── State ───
 let state = {
     token: null,
-    currentPage: null,
-    currentPageContent: null,
+    currentPage: 'index.html',
     currentPageSha: null,
-    changes: 0,
     originalHTML: null,
-    currentLang: 'ar',
+    changes: 0,
+    isEditMode: false,
     pendingImageData: null,
     pendingImageTarget: null,
 };
@@ -45,85 +23,63 @@ let state = {
 // ═══════════════════════════════════════════
 //  AUTHENTICATION
 // ═══════════════════════════════════════════
-
 async function hashPassword(password) {
     const encoded = new TextEncoder().encode(password);
     const hashBuffer = await crypto.subtle.digest('SHA-256', encoded);
-    return Array.from(new Uint8Array(hashBuffer))
-        .map(x => x.toString(16).padStart(2, '0'))
-        .join('');
+    return Array.from(new Uint8Array(hashBuffer)).map(x => x.toString(16).padStart(2, '0')).join('');
 }
 
 async function handleLogin() {
-    const passwordInput = document.getElementById('adminPassword');
-    const password = passwordInput.value.trim();
+    const password = document.getElementById('adminPassword').value.trim();
     const errorEl = document.getElementById('loginError');
     const btnText = document.querySelector('.btn-text');
     const btnLoader = document.querySelector('.btn-loader');
 
-    if (!password) {
-        errorEl.textContent = 'يرجى إدخال كلمة المرور.';
-        errorEl.style.display = 'block';
-        return;
-    }
+    if (!password) { errorEl.style.display = 'block'; return; }
 
     btnText.style.display = 'none';
     btnLoader.style.display = 'inline-block';
     errorEl.style.display = 'none';
 
-    // Check password
     const hash = await hashPassword(password);
-
-    // Check config hash
-    const storedHash = CONFIG.passwordHash;
-    if (hash !== storedHash) {
-        errorEl.textContent = 'كلمة المرور غير صحيحة. حاول مرة أخرى.';
+    if (hash !== CONFIG.passwordHash) {
+        errorEl.textContent = 'كلمة المرور غير صحيحة.';
         errorEl.style.display = 'block';
         btnText.style.display = 'inline';
         btnLoader.style.display = 'none';
         return;
     }
 
-    // Use stored token
     const storedToken = localStorage.getItem('daam_admin_token');
     if (storedToken) {
         state.token = storedToken;
         const valid = await validateToken();
         if (valid) {
-            showDashboard();
+            startEditorSession();
         } else {
-            showToast('فشل الاتصال بـ GitHub. يرجى التحقق من مفتاح الوصول.', 'error');
-            showSetupSection();
+            showToast('فشل الاتصال بـ GitHub.', 'error');
+            document.getElementById('setupSection').style.display = 'block';
         }
     } else {
-        showSetupSection();
+        document.getElementById('setupSection').style.display = 'block';
     }
 
     btnText.style.display = 'inline';
     btnLoader.style.display = 'none';
 }
 
-function showSetupSection() {
-    document.getElementById('setupSection').style.display = 'block';
-}
-
 async function saveSetup() {
-    const tokenInput = document.getElementById('githubToken');
-    const token = tokenInput.value.trim();
-
-    if (!token) {
-        showToast('يرجى إدخال رمز وصول صحيح.', 'error');
-        return;
-    }
+    const token = document.getElementById('githubToken').value.trim();
+    if (!token) { showToast('يرجى إدخال رمز وصول صحيح.', 'error'); return; }
 
     state.token = token;
     const valid = await validateToken();
     if (valid) {
         localStorage.setItem('daam_admin_token', token);
         showToast('تم حفظ الإعدادات بنجاح!', 'success');
-        showDashboard();
+        startEditorSession();
     } else {
-        showToast('الرمز غير صالح. تأكد من صلاحيات الوصول (repo).', 'error');
+        showToast('الرمز غير صالح.', 'error');
         state.token = null;
     }
 }
@@ -134,229 +90,198 @@ async function validateToken() {
             headers: { 'Authorization': `token ${state.token}` }
         });
         return res.ok;
-    } catch {
-        return false;
-    }
+    } catch { return false; }
 }
 
 function handleLogout() {
     state.token = null;
-    state.currentPage = null;
-    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('editorView').style.display = 'none';
     document.getElementById('loginScreen').style.display = 'flex';
     document.getElementById('adminPassword').value = '';
+    document.getElementById('editorFrame').src = 'about:blank';
 }
 
-// Add enter key support for login
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('adminPassword').addEventListener('keydown', (e) => {
         if (e.key === 'Enter') handleLogin();
     });
-
-    // Auto-login if session exists
-    const storedToken = localStorage.getItem('daam_admin_token');
-    if (storedToken) {
-        state.token = storedToken;
-        validateToken().then(valid => {
-            if (valid) {
-                // We still need to ask for password for security in this session
-                // Or we can auto-login if you prefer. Reference does auto-login if token is valid.
-                showDashboard();
-            }
-        });
-    }
 });
 
 // ═══════════════════════════════════════════
-//  DASHBOARD
+//  EDITOR SESSION & NAVIGATION
 // ═══════════════════════════════════════════
-
-function showDashboard() {
+function startEditorSession() {
     document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'block';
-    renderPageGrid();
-}
-
-function filterPages(lang) {
-    state.currentLang = lang;
-    document.querySelectorAll('.page-tab').forEach(t => t.classList.remove('active'));
-    document.querySelector(`.page-tab[data-lang="${lang}"]`).classList.add('active');
-    renderPageGrid();
-}
-
-function renderPageGrid() {
-    const grid = document.getElementById('pageGrid');
-    const pages = CONFIG.pages[state.currentLang];
-
-    grid.innerHTML = pages.map((page, idx) => `
-    <div class="page-card" onclick="openEditor('${page.file}')" style="animation-delay:${idx * 0.05}s">
-      <div class="page-card-icon">${page.icon}</div>
-      <div class="page-card-title">${page.title}</div>
-      <div class="page-card-path">${page.file}</div>
-      <div class="page-card-arrow">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="9 18 15 12 9 6"></polyline>
-        </svg>
-      </div>
-    </div>
-  `).join('');
-}
-
-// ═══════════════════════════════════════════
-//  PAGE EDITOR
-// ═══════════════════════════════════════════
-
-async function openEditor(filePath) {
-    state.currentPage = filePath;
-    state.changes = 0;
-
-    document.getElementById('pageListView').style.display = 'none';
     document.getElementById('editorView').style.display = 'flex';
-    document.getElementById('editorPageName').textContent = filePath;
+    loadPageInEditor('index.html');
+}
+
+async function loadPageInEditor(pagePath) {
+    if (state.changes > 0) {
+        if (!confirm('لديك تعديلات غير محفوظة. هل تريد الانتقال لصفحة أخرى وفقدان التعديلات؟')) {
+            // Revert iframe navigation if possible
+            return;
+        }
+    }
+
+    showLoading('جاري تهيئة الصفحة...');
+    state.currentPage = pagePath;
+    document.getElementById('currentPageLabel').textContent = pagePath;
+    state.changes = 0;
     updateChangeUI();
 
-    showLoading('جاري تحميل الصفحة...');
-
     try {
-        // 1. Fetch raw HTML from GitHub API
-        const res = await fetch(
-            `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/${filePath}?ref=${CONFIG.branch}`,
-            { headers: { 'Authorization': `token ${state.token}` } }
-        );
+        // Fetch raw HTML from GitHub for the base save state
+        const apiPath = pagePath.startsWith('/') ? pagePath.substring(1) : pagePath;
+        const res = await fetch(`https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/${apiPath}?ref=${CONFIG.branch}`, {
+            headers: { 'Authorization': `token ${state.token}` }
+        });
 
-        if (!res.ok) throw new Error('فشل جلب الصفحة من GitHub');
+        if (res.ok) {
+            const data = await res.json();
+            state.currentPageSha = data.sha;
+            state.originalHTML = decodeBase64(data.content);
+        } else {
+            console.warn('Could not fetch source from GitHub for ' + apiPath);
+        }
 
-        const data = await res.json();
-        state.currentPageSha = data.sha;
-
-        const content = decodeBase64(data.content);
-        state.originalHTML = content;
-        state.currentPageContent = content;
-
-        // 2. Load the LIVE page URL in the iframe
-        const iframe = document.getElementById('editorFrame');
+        // Load page in iframe
         const origin = window.location.origin;
         const sitePath = window.location.pathname.replace(/\/admin\/.*$/, '/');
-        const liveUrl = `${origin}${sitePath}${filePath}`;
-
-        iframe.removeAttribute('sandbox');
-
+        const liveUrl = `${origin}${sitePath}${pagePath}`;
+        
+        const iframe = document.getElementById('editorFrame');
+        
         iframe.onload = () => {
             setTimeout(() => {
-                injectEditingCapabilities(iframe);
+                injectAdminBehaviors(iframe);
+                applyModeState(); // Apply current mode (browse vs edit)
                 hideLoading();
-            }, 800);
+            }, 500);
         };
-
-        iframe.src = liveUrl;
+        
+        // Only set src if it's different to avoid double-loading on organic navigation
+        if (!iframe.src.includes(liveUrl)) {
+            iframe.src = liveUrl;
+        }
 
     } catch (err) {
         hideLoading();
-        showToast('فشل تحميل الصفحة: ' + err.message, 'error');
-        closeEditor();
+        showToast('حدث خطأ: ' + err.message, 'error');
     }
 }
 
-function decodeBase64(encoded) {
-    const cleaned = encoded.replace(/\n/g, '');
-    const bytes = atob(cleaned);
-    const uint8Array = new Uint8Array(bytes.length);
-    for (let i = 0; i < bytes.length; i++) {
-        uint8Array[i] = bytes.charCodeAt(i);
-    }
-    return new TextDecoder('utf-8').decode(uint8Array);
+// ═══════════════════════════════════════════
+//  MODE TOGGLE & INJECTION
+// ═══════════════════════════════════════════
+function toggleMode() {
+    state.isEditMode = document.getElementById('modeSwitch').checked;
+    applyModeState();
 }
 
-function encodeBase64(str) {
-    const uint8Array = new TextEncoder().encode(str);
-    let binary = '';
-    for (let i = 0; i < uint8Array.length; i++) {
-        binary += String.fromCharCode(uint8Array[i]);
-    }
-    return btoa(binary);
-}
-
-function closeEditor() {
-    document.getElementById('editorView').style.display = 'none';
-    document.getElementById('pageListView').style.display = 'block';
-    state.currentPage = null;
-    state.currentPageContent = null;
-    state.currentPageSha = null;
-    state.changes = 0;
-
+function applyModeState() {
     const iframe = document.getElementById('editorFrame');
-    iframe.src = 'about:blank';
-}
-
-// ═══════════════════════════════════════════
-//  INLINE EDITING
-// ═══════════════════════════════════════════
-
-function injectEditingCapabilities(iframe) {
     const doc = iframe.contentDocument || iframe.contentWindow.document;
     if (!doc) return;
 
+    if (state.isEditMode) {
+        doc.body.classList.add('ai-edit-mode');
+        document.getElementById('editLabel').classList.add('active-mode');
+        document.getElementById('browseLabel').classList.remove('active-mode');
+    } else {
+        doc.body.classList.remove('ai-edit-mode');
+        document.getElementById('browseLabel').classList.add('active-mode');
+        document.getElementById('editLabel').classList.remove('active-mode');
+    }
+}
+
+function injectAdminBehaviors(iframe) {
+    const win = iframe.contentWindow;
+    const doc = win.document;
+    if (!doc || doc.getElementById('ai-admin-styles')) return; // Already injected
+
+    // Track intra-site navigation so we know what page we're on
+    win.addEventListener('unload', () => {
+        showLoading('جاري الانتقال...');
+    });
+
+    win.addEventListener('DOMContentLoaded', () => {
+        const currentPath = win.location.pathname.replace(window.location.pathname.replace(/\/admin\/.*$/, '/'), '') || 'index.html';
+        if (currentPath !== state.currentPage) {
+            loadPageInEditor(currentPath);
+        }
+    });
+    // Check path immediately in case it loaded fast
+    const currentPath = win.location.pathname.replace(window.location.pathname.replace(/\/admin\/.*$/, '/'), '') || 'index.html';
+    if (currentPath !== state.currentPage && currentPath !== 'blank') {
+         // Update internal state without reloading iframe
+         state.currentPage = currentPath;
+         document.getElementById('currentPageLabel').textContent = currentPath;
+         // Background fetch GitHub state
+         fetchGithubState(currentPath);
+    }
+
+    // Inject Styles for Edit Mode
     const style = doc.createElement('style');
+    style.id = 'ai-admin-styles';
     style.textContent = `
-    [data-ai-editable]:hover {
-      outline: 2px dashed rgba(0, 74, 173, 0.4) !important;
-      outline-offset: 4px !important;
-      cursor: text !important;
-    }
-    [data-ai-editable]:focus {
-      outline: 2px solid #004aad !important;
-      outline-offset: 4px !important;
-      background: rgba(0, 74, 173, 0.05) !important;
-    }
-    [data-ai-editable].edited {
-      outline: 2px solid #28a745 !important;
-      outline-offset: 4px !important;
-    }
-    [data-ai-img] {
-      position: relative !important;
-      cursor: pointer !important;
-    }
-    [data-ai-img]:hover {
-      filter: brightness(0.85) !important;
-    }
-    .ai-img-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(30, 41, 59, 0.6);
-      color: white;
-      font-size: 14px;
-      font-weight: 600;
-      opacity: 0;
-      transition: opacity 0.2s;
-      pointer-events: none;
-      border-radius: inherit;
-      z-index: 100;
-    }
-    [data-ai-img]:hover .ai-img-overlay {
-      opacity: 1;
-    }
-  `;
+        /* When Edit Mode is Active */
+        body.ai-edit-mode [data-ai-editable]:hover {
+            outline: 2px dashed rgba(0, 74, 173, 0.5) !important;
+            outline-offset: 2px !important;
+            cursor: text !important;
+            border-radius: 2px;
+        }
+        body.ai-edit-mode [data-ai-editable]:focus {
+            outline: 2px solid #004aad !important;
+            outline-offset: 2px !important;
+            background: rgba(0, 74, 173, 0.05) !important;
+        }
+        body.ai-edit-mode .edited {
+            outline: 2px solid #28a745 !important;
+            outline-offset: 2px !important;
+        }
+        body.ai-edit-mode [data-ai-img] {
+            position: relative !important;
+            cursor: pointer !important;
+            transition: 0.2s;
+        }
+        body.ai-edit-mode [data-ai-img]:hover {
+            outline: 3px solid #004aad !important;
+            outline-offset: 2px !important;
+            filter: brightness(0.85);
+        }
+        /* Disable pointer events on links inside editable areas during edit mode */
+        body.ai-edit-mode a[data-ai-editable] {
+            cursor: text !important;
+        }
+    `;
     doc.head.appendChild(style);
 
-    const textElements = doc.querySelectorAll('h1, h2, h3, h4, h5, h6, p, li, blockquote, span, a, .btn, .btn-primary, .btn-secondary, .section-title h4');
+    // Annotate Text Elements
+    const textSelectors = 'h1, h2, h3, h4, h5, h6, p, li, blockquote, span:not(.fas):not(.fab), a, .btn, .btn-primary, .btn-secondary, .section-title h4';
+    const textElements = doc.querySelectorAll(textSelectors);
+    
     textElements.forEach(el => {
-        // Skip icons and scripts
-        if (el.tagName === 'SCRIPT' || el.tagName === 'STYLE' || el.classList.contains('fas') || el.classList.contains('fab')) return;
-        
-        // Skip navigation and footer ONLY if they are basic menu items (to avoid breaking layout)
-        // But the user wants "all sections", so let's allow it but be careful.
+        if (el.tagName === 'SCRIPT' || el.tagName === 'STYLE') return;
         
         el.setAttribute('data-ai-editable', 'true');
-        el.setAttribute('contenteditable', 'true');
         el.setAttribute('spellcheck', 'false');
         el.dataset.originalText = el.innerHTML;
 
+        // Make contenteditable only when focused, logic handled via click to prevent breaking layouts accidentally
+        el.addEventListener('click', (e) => {
+            if (!state.isEditMode) return; // Let links work naturally in browse mode
+            
+            // Prevent link navigation in edit mode
+            e.preventDefault();
+            e.stopPropagation();
+            
+            el.setAttribute('contenteditable', 'true');
+            el.focus();
+        });
+
+        // Track changes
         el.addEventListener('input', () => {
             if (el.innerHTML !== el.dataset.originalText) {
                 el.classList.add('edited');
@@ -366,30 +291,38 @@ function injectEditingCapabilities(iframe) {
                 recountChanges(doc);
             }
         });
+
+        // Clean up contenteditable on blur
+        el.addEventListener('blur', () => {
+            el.removeAttribute('contenteditable');
+        });
     });
 
+    // Handle Link blocking globally for Edit Mode
+    doc.addEventListener('click', (e) => {
+        if (state.isEditMode) {
+            const link = e.target.closest('a');
+            if (link) {
+                e.preventDefault();
+            }
+        }
+    }, true); // Use capture phase
+
+    // Annotate Images
     const images = doc.querySelectorAll('img');
     images.forEach(img => {
-        // Skip tiny icons and hidden images
-        if (img.naturalWidth > 0 && img.naturalWidth < 30) return;
-        if (img.classList.contains('no-edit')) return;
+        if (img.naturalWidth > 0 && img.naturalWidth < 30) return; // Skip icons
 
         img.setAttribute('data-ai-img', 'true');
         img.dataset.originalSrc = img.getAttribute('src');
 
-        const wrapper = img.parentElement;
-        if (window.getComputedStyle(wrapper).position === 'static') {
-            wrapper.style.position = 'relative';
-        }
-
-        const overlay = doc.createElement('div');
-        overlay.className = 'ai-img-overlay';
-        overlay.innerHTML = '📷 اضغط لاستبدال الصورة';
-        wrapper.appendChild(overlay);
-
         img.addEventListener('click', (e) => {
+            if (!state.isEditMode) return;
             e.preventDefault();
-            openImageModal(img);
+            e.stopPropagation();
+            
+            // Tell parent window to open image modal
+            window.parent.openImageModal(img);
         });
     });
 }
@@ -403,31 +336,46 @@ function recountChanges(doc) {
 
 function updateChangeUI() {
     const counter = document.getElementById('changeCounter');
-    const btnUndo = document.getElementById('btnUndo');
     const btnSave = document.getElementById('btnSave');
 
     if (state.changes > 0) {
-        counter.textContent = `${state.changes} تعديلات معلقة`;
+        counter.textContent = `${state.changes} تعديلات`;
         counter.style.display = 'inline-block';
-        btnUndo.style.display = 'flex';
         btnSave.disabled = false;
+        btnSave.textContent = 'نشر التعديلات';
+        btnSave.classList.add('has-changes');
     } else {
         counter.style.display = 'none';
-        btnUndo.style.display = 'none';
         btnSave.disabled = true;
+        btnSave.textContent = 'لا يوجد تغيير';
+        btnSave.classList.remove('has-changes');
     }
 }
 
-// ═══════════════════════════════════════════
-//  IMAGE HANDLING
-// ═══════════════════════════════════════════
+async function fetchGithubState(path) {
+    try {
+        const apiPath = path.startsWith('/') ? path.substring(1) : path;
+        const res = await fetch(`https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/${apiPath}?ref=${CONFIG.branch}`, {
+            headers: { 'Authorization': `token ${state.token}` }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            state.currentPageSha = data.sha;
+            state.originalHTML = decodeBase64(data.content);
+        }
+    } catch(e) {}
+}
 
-function openImageModal(imgEl) {
+// ═══════════════════════════════════════════
+//  IMAGE MODAL
+// ═══════════════════════════════════════════
+// Needs to be exposed globally so iframe can call it
+window.openImageModal = function(imgEl) {
     state.pendingImageTarget = imgEl;
     const modal = document.getElementById('imageModal');
     document.getElementById('modalPreview').src = imgEl.src;
     modal.style.display = 'flex';
-}
+};
 
 function handleImageFile(file) {
     const reader = new FileReader();
@@ -457,7 +405,9 @@ function confirmImageReplace() {
     img.dataset.newImageData = state.pendingImageData.dataUrl;
     img.dataset.newImageName = state.pendingImageData.name;
     
-    recountChanges(img.ownerDocument);
+    // Iframe doc
+    const doc = document.getElementById('editorFrame').contentDocument;
+    recountChanges(doc);
     closeImageModal();
 }
 
@@ -465,13 +415,15 @@ function closeImageModal() {
     document.getElementById('imageModal').style.display = 'none';
     state.pendingImageTarget = null;
     state.pendingImageData = null;
+    document.getElementById('btnConfirmImage').disabled = true;
 }
 
 // ═══════════════════════════════════════════
 //  SAVE / PUBLISH
 // ═══════════════════════════════════════════
-
 async function saveChanges() {
+    if (state.changes === 0 || !state.originalHTML) return;
+    
     showLoading('جاري رفع التعديلات والصور...');
     try {
         const iframe = document.getElementById('editorFrame');
@@ -482,9 +434,16 @@ async function saveChanges() {
         const imageMap = new Map();
         for (const img of changedImages) {
             const base64Data = img.dataset.newImageData.split(',')[1];
-            const name = `assets/images/uploaded_${Date.now()}_${img.dataset.newImageName}`;
-            await githubCreateOrUpdateFile(name, base64Data, `Upload: ${name}`);
-            imageMap.set(img.dataset.originalSrc, name);
+            // Format extension
+            const ext = img.dataset.newImageName.split('.').pop();
+            const safeName = `img_${Date.now()}.${ext}`;
+            const uploadPath = `assets/images/${safeName}`;
+            
+            await githubCreateOrUpdateFile(uploadPath, base64Data, `Admin Upload: ${uploadPath}`);
+            
+            // Map the old src to the new relative path
+            const relPathPrefix = state.currentPage.includes('/') ? '../' : '';
+            imageMap.set(img.dataset.originalSrc, `${relPathPrefix}assets/images/${safeName}`);
         }
 
         // 2. Handle HTML
@@ -498,11 +457,25 @@ async function saveChanges() {
             updatedHTML = updatedHTML.replace(new RegExp(escapeRegExp(oldSrc), 'g'), newPath);
         }
 
-        await githubCreateOrUpdateFile(state.currentPage, encodeBase64(updatedHTML), `Admin Update: ${state.currentPage}`, state.currentPageSha);
+        const apiPath = state.currentPage.startsWith('/') ? state.currentPage.substring(1) : state.currentPage;
+        await githubCreateOrUpdateFile(apiPath, encodeBase64(updatedHTML), `Admin Content Update: ${apiPath}`, state.currentPageSha);
         
         hideLoading();
-        showToast('تم النشر بنجاح! سيتم تحديث الموقع خلال دقيقة.', 'success');
-        setTimeout(() => location.reload(), 2000);
+        showToast('تم النشر بنجاح!', 'success');
+        
+        // Reset changes state without reloading iframe completely
+        state.changes = 0;
+        state.originalHTML = updatedHTML;
+        editedElements.forEach(el => {
+            el.classList.remove('edited');
+            el.dataset.originalText = el.innerHTML;
+        });
+        changedImages.forEach(img => {
+            img.removeAttribute('data-ai-img-changed');
+            img.dataset.originalSrc = img.getAttribute('src');
+        });
+        updateChangeUI();
+        
     } catch (err) {
         hideLoading();
         showToast('فشل النشر: ' + err.message, 'error');
@@ -510,11 +483,26 @@ async function saveChanges() {
 }
 
 function cleanEditableHTML(html) {
-    return html.replace(/contenteditable="true"/g, '').replace(/data-ai-editable="true"/g, '').replace(/class="edited"/g, '').trim();
+    return html.replace(/contenteditable="true"/g, '').replace(/data-ai-editable="true"/g, '').replace(/class="edited"/g, '').replace(/spellcheck="false"/g, '').trim();
 }
 
 function escapeRegExp(string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function decodeBase64(encoded) {
+    const cleaned = encoded.replace(/\n/g, '');
+    const bytes = atob(cleaned);
+    const uint8Array = new Uint8Array(bytes.length);
+    for (let i = 0; i < bytes.length; i++) { uint8Array[i] = bytes.charCodeAt(i); }
+    return new TextDecoder('utf-8').decode(uint8Array);
+}
+
+function encodeBase64(str) {
+    const uint8Array = new TextEncoder().encode(str);
+    let binary = '';
+    for (let i = 0; i < uint8Array.length; i++) { binary += String.fromCharCode(uint8Array[i]); }
+    return btoa(binary);
 }
 
 async function githubCreateOrUpdateFile(path, base64Content, message, sha = null) {
