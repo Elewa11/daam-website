@@ -460,15 +460,16 @@ function injectAdminBehaviors(iframe) {
     const toolbar = doc.createElement('div');
     toolbar.id = 'ai-text-toolbar';
     toolbar.innerHTML = `
-        <button onclick="document.execCommand('bold')" title="Bold"><b>B</b></button>
-        <button onclick="document.execCommand('italic')" title="Italic"><i>I</i></button>
-        <button onclick="document.execCommand('underline')" title="Underline"><u>U</u></button>
+        <button data-cmd="bold" title="غامق"><b>B</b></button>
+        <button data-cmd="italic" title="مائل"><i>I</i></button>
+        <button data-cmd="underline" title="تسطير"><u>U</u></button>
+        <button data-cmd="strikeThrough" title="شطب"><s>S</s></button>
         <div class="separator"></div>
-        <button onclick="document.execCommand('justifyRight')" title="Align Right">⫸</button>
-        <button onclick="document.execCommand('justifyCenter')" title="Align Center">☰</button>
-        <button onclick="document.execCommand('justifyLeft')" title="Align Left">⫷</button>
+        <button data-cmd="justifyRight" title="محاذاة يمين">⫸</button>
+        <button data-cmd="justifyCenter" title="توسيط">☰</button>
+        <button data-cmd="justifyLeft" title="محاذاة يسار">⫷</button>
         <div class="separator"></div>
-        <select onchange="document.execCommand('fontSize', false, this.value); this.value='';" title="Font Size">
+        <select data-cmd="fontSize" title="حجم الخط">
             <option value="">حجم الخط</option>
             <option value="1">صغير جداً</option>
             <option value="2">صغير</option>
@@ -479,12 +480,80 @@ function injectAdminBehaviors(iframe) {
             <option value="7">ضخم</option>
         </select>
         <div class="separator"></div>
-        <input type="color" id="aiTextColor" value="#ffffff" onchange="document.execCommand('foreColor', false, this.value)" title="Text Color">
-        <input type="color" id="aiBgColor" value="#000000" onchange="document.execCommand('hiliteColor', false, this.value)" title="Background Color">
+        <label title="لون النص" style="display:flex;align-items:center;gap:2px;color:#e2e8f0;font-size:11px;cursor:pointer;">
+            A <input type="color" data-cmd="foreColor" value="#ffffff" style="width:24px;height:24px;border:none;background:transparent;cursor:pointer;padding:0;">
+        </label>
+        <label title="لون الخلفية" style="display:flex;align-items:center;gap:2px;color:#e2e8f0;font-size:11px;cursor:pointer;">
+            🎨 <input type="color" data-cmd="hiliteColor" value="#ffff00" style="width:24px;height:24px;border:none;background:transparent;cursor:pointer;padding:0;">
+        </label>
     `;
     doc.body.appendChild(toolbar);
 
-    // Show/hide toolbar when text is selected or element is focused
+    // CRITICAL: Prevent toolbar from stealing focus/selection
+    toolbar.addEventListener('mousedown', (e) => {
+        e.preventDefault(); // This keeps the text selection alive!
+    });
+
+    // Handle button clicks
+    toolbar.querySelectorAll('button[data-cmd]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const cmd = btn.dataset.cmd;
+            doc.execCommand(cmd, false, null);
+            // Mark as edited
+            const focused = doc.querySelector('[contenteditable="true"]');
+            if (focused) {
+                focused.classList.add('edited');
+                recountChanges(doc);
+            }
+        });
+    });
+
+    // Handle select (font size)
+    toolbar.querySelectorAll('select[data-cmd]').forEach(sel => {
+        sel.addEventListener('mousedown', (e) => {
+            e.stopPropagation(); // Allow select to open
+        });
+        sel.addEventListener('change', (e) => {
+            if (sel.value) {
+                doc.execCommand(sel.dataset.cmd, false, sel.value);
+                sel.value = '';
+                const focused = doc.querySelector('[contenteditable="true"]');
+                if (focused) {
+                    focused.classList.add('edited');
+                    recountChanges(doc);
+                }
+            }
+        });
+    });
+
+    // Handle color inputs
+    toolbar.querySelectorAll('input[data-cmd]').forEach(colorInput => {
+        colorInput.addEventListener('mousedown', (e) => {
+            e.stopPropagation(); // Allow color picker to open
+        });
+        colorInput.addEventListener('input', (e) => {
+            doc.execCommand(colorInput.dataset.cmd, false, colorInput.value);
+            const focused = doc.querySelector('[contenteditable="true"]');
+            if (focused) {
+                focused.classList.add('edited');
+                recountChanges(doc);
+            }
+        });
+    });
+
+    // Track the currently active editable element
+    let activeEditable = null;
+
+    // Show toolbar when an editable element gets focus
+    doc.addEventListener('focusin', (e) => {
+        if (state.isEditMode && e.target.hasAttribute('data-ai-editable')) {
+            activeEditable = e.target;
+            toolbar.classList.add('visible');
+        }
+    });
+
+    // Show toolbar when text is selected
     doc.addEventListener('mouseup', () => {
         if (!state.isEditMode) return;
         const sel = doc.getSelection();
@@ -492,22 +561,18 @@ function injectAdminBehaviors(iframe) {
             toolbar.classList.add('visible');
         }
     });
+
+    // Hide toolbar only when clicking outside both toolbar and editable elements
     doc.addEventListener('mousedown', (e) => {
-        if (!e.target.closest('#ai-text-toolbar')) {
-            // Keep toolbar visible for a moment to allow toolbar clicks
-            setTimeout(() => {
-                const sel = doc.getSelection();
-                if (!sel || sel.toString().trim().length === 0) {
-                    toolbar.classList.remove('visible');
-                }
-            }, 200);
-        }
-    });
-    // Also show toolbar on focus of editable elements
-    doc.addEventListener('focusin', (e) => {
-        if (state.isEditMode && e.target.hasAttribute('data-ai-editable')) {
-            toolbar.classList.add('visible');
-        }
+        if (e.target.closest('#ai-text-toolbar')) return; // Clicking on toolbar
+        if (e.target.hasAttribute('data-ai-editable')) return; // Clicking on editable
+        if (e.target.closest('[data-ai-editable]')) return; // Inside editable
+        
+        // Delay hide to let click handler finish
+        setTimeout(() => {
+            toolbar.classList.remove('visible');
+            activeEditable = null;
+        }, 300);
     });
 
     // ── Annotate Text Elements ──
@@ -540,8 +605,16 @@ function injectAdminBehaviors(iframe) {
             }
         });
 
-        el.addEventListener('blur', () => {
-            el.removeAttribute('contenteditable');
+        el.addEventListener('blur', (e) => {
+            // Don't remove contenteditable if user clicked the toolbar
+            const relatedTarget = e.relatedTarget;
+            if (relatedTarget && relatedTarget.closest('#ai-text-toolbar')) return;
+            
+            // Small delay to check if focus went to toolbar
+            setTimeout(() => {
+                if (doc.activeElement && doc.activeElement.closest('#ai-text-toolbar')) return;
+                el.removeAttribute('contenteditable');
+            }, 150);
         });
     });
 
