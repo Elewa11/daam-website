@@ -280,49 +280,40 @@ function injectAdminBehaviors(iframe) {
         if (!link) return;
 
         if (state.isEditMode) {
-            // In edit mode, block all navigation
             e.preventDefault();
             e.stopPropagation();
             return;
         }
 
-        // In browse mode, intercept internal links to track page changes
         const href = link.getAttribute('href');
         if (href && !href.startsWith('http') && !href.startsWith('#') && !href.startsWith('mailto:')) {
             e.preventDefault();
-            
-            // Resolve the href relative to the current page
             let newPage = href;
             if (newPage.startsWith('./')) newPage = newPage.substring(2);
             if (newPage.startsWith('../')) {
-                // Handle relative up paths
                 const parts = state.currentPage.split('/');
                 parts.pop();
                 newPage = newPage.replace(/^\.\.\//, '');
                 newPage = parts.length > 0 ? parts.join('/') + '/' + newPage : newPage;
             }
             newPage = newPage.replace(/^\/+/, '');
-            
-            console.log('[Admin] Navigating to:', newPage);
             loadPageInEditor(newPage);
         } else if (href && href.startsWith('#')) {
             // Allow anchor scrolling
         } else if (href && href.startsWith('http')) {
-            // External links - do nothing
             e.preventDefault();
         }
     }, true);
 
-    // Inject Styles for Edit Mode
+    // ── Inject Enhanced Styles ──
     const style = doc.createElement('style');
     style.id = 'ai-admin-styles';
     style.textContent = `
-        /* When Edit Mode is Active */
+        /* Editable Text Hover */
         body.ai-edit-mode [data-ai-editable]:hover {
             outline: 2px dashed rgba(0, 74, 173, 0.5) !important;
             outline-offset: 2px !important;
             cursor: text !important;
-            border-radius: 2px;
         }
         body.ai-edit-mode [data-ai-editable]:focus {
             outline: 2px solid #004aad !important;
@@ -333,8 +324,8 @@ function injectAdminBehaviors(iframe) {
             outline: 2px solid #28a745 !important;
             outline-offset: 2px !important;
         }
+        /* Images */
         body.ai-edit-mode [data-ai-img] {
-            position: relative !important;
             cursor: pointer !important;
             transition: 0.2s;
         }
@@ -346,16 +337,186 @@ function injectAdminBehaviors(iframe) {
         body.ai-edit-mode a[data-ai-editable] {
             cursor: text !important;
         }
+
+        /* ── Section Delete Button ── */
+        body.ai-edit-mode section,
+        body.ai-edit-mode .section,
+        body.ai-edit-mode [class*="section"],
+        body.ai-edit-mode .hero,
+        body.ai-edit-mode .team-section,
+        body.ai-edit-mode .programs-section,
+        body.ai-edit-mode .contact-section,
+        body.ai-edit-mode .about-section {
+            position: relative !important;
+        }
+        .ai-delete-btn {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 9999;
+            background: #ef4444;
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            font-size: 18px;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            transition: 0.2s;
+        }
+        .ai-delete-btn:hover { background: #dc2626; transform: scale(1.1); }
+        body.ai-edit-mode section:hover > .ai-delete-btn,
+        body.ai-edit-mode .section:hover > .ai-delete-btn,
+        body.ai-edit-mode [class*="section"]:hover > .ai-delete-btn,
+        body.ai-edit-mode .hero:hover > .ai-delete-btn,
+        body.ai-edit-mode .team-section:hover > .ai-delete-btn {
+            display: flex !important;
+        }
+
+        /* ── Floating Rich Text Toolbar ── */
+        #ai-text-toolbar {
+            position: fixed;
+            top: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 12px;
+            padding: 6px 10px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            z-index: 99999;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+            transition: top 0.25s ease;
+            flex-wrap: wrap;
+        }
+        #ai-text-toolbar.visible { top: 10px; }
+        #ai-text-toolbar button {
+            background: transparent;
+            color: #e2e8f0;
+            border: 1px solid transparent;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.15s;
+        }
+        #ai-text-toolbar button:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
+        #ai-text-toolbar button.active { background: #2563eb; color: white; }
+        #ai-text-toolbar .separator {
+            width: 1px;
+            height: 24px;
+            background: rgba(255,255,255,0.15);
+            margin: 0 4px;
+        }
+        #ai-text-toolbar select {
+            background: #0f172a;
+            color: #e2e8f0;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 12px;
+            cursor: pointer;
+            height: 32px;
+        }
+        #ai-text-toolbar input[type="color"] {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            padding: 0;
+            border-radius: 6px;
+        }
+
+        /* ── Card placeholder image areas ── */
+        body.ai-edit-mode .placeholder-img,
+        body.ai-edit-mode .card-img,
+        body.ai-edit-mode .team-img,
+        body.ai-edit-mode [class*="placeholder"],
+        body.ai-edit-mode .card-body img,
+        body.ai-edit-mode .card img {
+            cursor: pointer !important;
+        }
+        body.ai-edit-mode .placeholder-img:hover,
+        body.ai-edit-mode .card-img:hover,
+        body.ai-edit-mode .team-img:hover {
+            outline: 3px solid #004aad !important;
+            filter: brightness(0.85);
+        }
     `;
     doc.head.appendChild(style);
 
-    // Annotate Text Elements
-    const textSelectors = 'h1, h2, h3, h4, h5, h6, p, li, blockquote, span:not(.fas):not(.fab):not(.far), a, .btn, .btn-primary, .btn-secondary, td, th, label, figcaption';
+    // ── Create Rich Text Toolbar ──
+    const toolbar = doc.createElement('div');
+    toolbar.id = 'ai-text-toolbar';
+    toolbar.innerHTML = `
+        <button onclick="document.execCommand('bold')" title="Bold"><b>B</b></button>
+        <button onclick="document.execCommand('italic')" title="Italic"><i>I</i></button>
+        <button onclick="document.execCommand('underline')" title="Underline"><u>U</u></button>
+        <div class="separator"></div>
+        <button onclick="document.execCommand('justifyRight')" title="Align Right">⫸</button>
+        <button onclick="document.execCommand('justifyCenter')" title="Align Center">☰</button>
+        <button onclick="document.execCommand('justifyLeft')" title="Align Left">⫷</button>
+        <div class="separator"></div>
+        <select onchange="document.execCommand('fontSize', false, this.value); this.value='';" title="Font Size">
+            <option value="">حجم الخط</option>
+            <option value="1">صغير جداً</option>
+            <option value="2">صغير</option>
+            <option value="3">عادي</option>
+            <option value="4">متوسط</option>
+            <option value="5">كبير</option>
+            <option value="6">كبير جداً</option>
+            <option value="7">ضخم</option>
+        </select>
+        <div class="separator"></div>
+        <input type="color" id="aiTextColor" value="#ffffff" onchange="document.execCommand('foreColor', false, this.value)" title="Text Color">
+        <input type="color" id="aiBgColor" value="#000000" onchange="document.execCommand('hiliteColor', false, this.value)" title="Background Color">
+    `;
+    doc.body.appendChild(toolbar);
+
+    // Show/hide toolbar when text is selected or element is focused
+    doc.addEventListener('mouseup', () => {
+        if (!state.isEditMode) return;
+        const sel = doc.getSelection();
+        if (sel && sel.toString().trim().length > 0) {
+            toolbar.classList.add('visible');
+        }
+    });
+    doc.addEventListener('mousedown', (e) => {
+        if (!e.target.closest('#ai-text-toolbar')) {
+            // Keep toolbar visible for a moment to allow toolbar clicks
+            setTimeout(() => {
+                const sel = doc.getSelection();
+                if (!sel || sel.toString().trim().length === 0) {
+                    toolbar.classList.remove('visible');
+                }
+            }, 200);
+        }
+    });
+    // Also show toolbar on focus of editable elements
+    doc.addEventListener('focusin', (e) => {
+        if (state.isEditMode && e.target.hasAttribute('data-ai-editable')) {
+            toolbar.classList.add('visible');
+        }
+    });
+
+    // ── Annotate Text Elements ──
+    const textSelectors = 'h1, h2, h3, h4, h5, h6, p, li, blockquote, span:not(.fas):not(.fab):not(.far):not(.fa), a, .btn, .btn-primary, .btn-secondary, td, th, label, figcaption, div.card-title, div.card-text, .team-name, .member-name';
     const textElements = doc.querySelectorAll(textSelectors);
     
     textElements.forEach(el => {
         if (el.tagName === 'SCRIPT' || el.tagName === 'STYLE') return;
-        if (el.children.length > 3) return; // Skip containers with many children
+        if (el.children.length > 5 && !el.classList.contains('card-title')) return;
         
         el.setAttribute('data-ai-editable', 'true');
         el.setAttribute('spellcheck', 'false');
@@ -384,10 +545,11 @@ function injectAdminBehaviors(iframe) {
         });
     });
 
-    // Annotate Images
+    // ── Annotate ALL Images (including cards) ──
     const images = doc.querySelectorAll('img');
     images.forEach(img => {
-        if (img.naturalWidth > 0 && img.naturalWidth < 30) return;
+        // Skip only very tiny icons (< 20px)
+        if (img.naturalWidth > 0 && img.naturalWidth < 20) return;
 
         img.setAttribute('data-ai-img', 'true');
         img.dataset.originalSrc = img.getAttribute('src');
@@ -399,12 +561,59 @@ function injectAdminBehaviors(iframe) {
             window.parent.openImageModal(img);
         });
     });
+
+    // ── Make placeholder divs (card image areas) clickable for image upload ──
+    const cardImgAreas = doc.querySelectorAll('.placeholder-img, .card-img, .team-img, .card-img-top, [class*="placeholder"]');
+    cardImgAreas.forEach(div => {
+        if (div.tagName === 'IMG') return; // Already handled above
+        
+        div.setAttribute('data-ai-img', 'true');
+        div.dataset.originalSrc = div.style.backgroundImage || '';
+        div.dataset.isDiv = 'true';
+
+        div.addEventListener('click', (e) => {
+            if (!state.isEditMode) return;
+            e.preventDefault();
+            e.stopPropagation();
+            // For div placeholders, we open the image modal
+            // When confirmed, we'll set background-image instead of src
+            window.parent.openImageModal(div);
+        });
+    });
+
+    // ── Add Delete Buttons to Sections ──
+    const sectionSelectors = 'section, .section, [class*="section"], .hero, .team-section, .programs-section, .contact-section, .about-section';
+    const sections = doc.querySelectorAll(sectionSelectors);
+    sections.forEach(section => {
+        // Skip if already has delete button
+        if (section.querySelector('.ai-delete-btn')) return;
+        // Skip very small elements and the main body
+        if (section === doc.body || section.offsetHeight < 50) return;
+
+        const deleteBtn = doc.createElement('button');
+        deleteBtn.className = 'ai-delete-btn';
+        deleteBtn.innerHTML = '🗑';
+        deleteBtn.title = 'حذف هذا القسم';
+        deleteBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (confirm('هل أنت متأكد من حذف هذا القسم؟ لا يمكن التراجع.')) {
+                section.dataset.originalSection = section.outerHTML;
+                section.style.display = 'none';
+                section.setAttribute('data-ai-deleted', 'true');
+                recountChanges(doc);
+                showToast('تم حذف القسم. انشر لحفظ التعديل.', 'info');
+            }
+        });
+        section.appendChild(deleteBtn);
+    });
 }
 
 function recountChanges(doc) {
     const edited = doc.querySelectorAll('.edited');
     const imgEdited = doc.querySelectorAll('[data-ai-img-changed]');
-    state.changes = edited.length + imgEdited.length;
+    const deletedSections = doc.querySelectorAll('[data-ai-deleted]');
+    state.changes = edited.length + imgEdited.length + deletedSections.length;
     updateChangeUI();
 }
 
@@ -432,7 +641,9 @@ function updateChangeUI() {
 window.openImageModal = function(imgEl) {
     state.pendingImageTarget = imgEl;
     const modal = document.getElementById('imageModal');
-    document.getElementById('modalPreview').src = imgEl.src;
+    // Show current image - support both img.src and div background-image
+    const currentSrc = imgEl.tagName === 'IMG' ? imgEl.src : (imgEl.style.backgroundImage ? imgEl.style.backgroundImage.replace(/url\(['"]?|['"]?\)/g, '') : '');
+    document.getElementById('modalPreview').src = currentSrc || '';
     modal.style.display = 'flex';
 };
 
@@ -458,11 +669,21 @@ document.getElementById('imageInput').onchange = (e) => {
 document.getElementById('dropZone').onclick = () => document.getElementById('imageInput').click();
 
 function confirmImageReplace() {
-    const img = state.pendingImageTarget;
-    img.src = state.pendingImageData.dataUrl;
-    img.setAttribute('data-ai-img-changed', 'true');
-    img.dataset.newImageData = state.pendingImageData.dataUrl;
-    img.dataset.newImageName = state.pendingImageData.name;
+    const target = state.pendingImageTarget;
+    
+    if (target.tagName === 'IMG') {
+        // Standard img element
+        target.src = state.pendingImageData.dataUrl;
+    } else {
+        // Div placeholder - set background-image
+        target.style.backgroundImage = `url(${state.pendingImageData.dataUrl})`;
+        target.style.backgroundSize = 'cover';
+        target.style.backgroundPosition = 'center';
+    }
+    
+    target.setAttribute('data-ai-img-changed', 'true');
+    target.dataset.newImageData = state.pendingImageData.dataUrl;
+    target.dataset.newImageName = state.pendingImageData.name;
     
     const doc = document.getElementById('editorFrame').contentDocument;
     recountChanges(doc);
@@ -503,7 +724,7 @@ async function saveChanges() {
             imageMap.set(img.dataset.originalSrc, `${relPathPrefix}assets/images/${safeName}`);
         }
 
-        // 2. Handle HTML
+        // 2. Handle HTML text edits
         let updatedHTML = state.originalHTML;
         const editedElements = doc.querySelectorAll('[data-ai-editable].edited');
         for (const el of editedElements) {
@@ -514,11 +735,29 @@ async function saveChanges() {
             }
         }
         
+        // 3. Handle image path replacements
         for (const [oldSrc, newPath] of imageMap) {
             updatedHTML = updatedHTML.replace(new RegExp(escapeRegExp(oldSrc), 'g'), newPath);
         }
 
-        // 3. Publish to GitHub
+        // 4. Handle deleted sections
+        const deletedSections = doc.querySelectorAll('[data-ai-deleted]');
+        for (const section of deletedSections) {
+            const originalHTML = section.dataset.originalSection;
+            if (originalHTML) {
+                // Remove the section's original HTML from the page
+                const cleanedOriginal = originalHTML
+                    .replace(/<button class="ai-delete-btn"[^>]*>[^<]*<\/button>/g, '')
+                    .replace(/\s*data-original-section="[^"]*"/g, '')
+                    .replace(/\s*data-ai-deleted="true"/g, '')
+                    .replace(/\s*style="display:\s*none;?"/g, '');
+                if (updatedHTML.includes(cleanedOriginal)) {
+                    updatedHTML = updatedHTML.replace(cleanedOriginal, '');
+                }
+            }
+        }
+
+        // 5. Publish to GitHub
         const apiPath = state.currentPage;
         console.log('[Admin] Publishing to GitHub: contents/' + apiPath, 'SHA:', state.currentPageSha);
         
