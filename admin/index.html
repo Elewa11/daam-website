@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم مؤسسة دعم</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #004aad;
+            --secondary: #28a745;
+            --dark: #1e293b;
+            --light: #f8fafc;
+        }
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--light);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+        }
+        .sidebar {
+            width: 280px;
+            background: var(--dark);
+            color: white;
+            padding: 30px 20px;
+            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+        }
+        .sidebar h2 {
+            font-size: 1.5rem;
+            margin-bottom: 40px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 20px;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            border-radius: 10px;
+            transition: all 0.3s;
+            margin-bottom: 10px;
+        }
+        .nav-item:hover, .nav-item.active {
+            background: var(--primary);
+            color: white;
+        }
+        .main-content {
+            flex: 1;
+            padding: 50px;
+            overflow-y: auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+        .page-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            border: 1px solid #e2e8f0;
+        }
+        .page-info h3 { margin: 0; font-size: 1.25rem; }
+        .page-info p { margin: 5px 0 0; color: #64748b; font-size: 0.9rem; }
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.3s;
+            border: none;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-secondary { background: var(--secondary); color: white; }
+        .token-status {
+            font-size: 0.85rem;
+            padding: 5px 12px;
+            border-radius: 20px;
+            background: #ffe4e6;
+            color: #e11d48;
+        }
+        .token-status.valid {
+            background: #dcfce7;
+            color: #15803d;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>لوحة التحكم</h2>
+        <a href="index.html" class="nav-item active">
+            <i class="fas fa-home"></i> صفحات الموقع
+        </a>
+        <a href="#" class="nav-item" onclick="setupToken()">
+            <i class="fas fa-key"></i> إعدادات النشر
+        </a>
+    </div>
+    <div class="main-content">
+        <div class="header">
+            <h1>إدارة الصفحات</h1>
+            <div id="token-indicator" class="token-status">جاري التحقق من التشفير...</div>
+        </div>
+
+        <div class="page-list">
+            <div class="page-card">
+                <div class="page-info">
+                    <h3>الصفحة الرئيسية</h3>
+                    <p>index.html</p>
+                </div>
+                <a href="editor.html?page=index.html" class="btn btn-primary">تعديل بصري <i class="fas fa-edit"></i></a>
+            </div>
+            <div class="page-card">
+                <div class="page-info">
+                    <h3>من نحن</h3>
+                    <p>about.html</p>
+                </div>
+                <a href="editor.html?page=about.html" class="btn btn-primary">تعديل بصري <i class="fas fa-edit"></i></a>
+            </div>
+            <div class="page-card">
+                <div class="page-info">
+                    <h3>برامجنا</h3>
+                    <p>programs.html</p>
+                </div>
+                <a href="editor.html?page=programs.html" class="btn btn-primary">تعديل بصري <i class="fas fa-edit"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function checkToken() {
+            const token = localStorage.getItem('gh_token');
+            const indicator = document.getElementById('token-indicator');
+            if (token) {
+                indicator.innerText = 'نظام النشر متصل ✅';
+                indicator.classList.add('valid');
+            } else {
+                indicator.innerText = 'مطلوب مفتاح النشر ⚠️';
+                indicator.classList.remove('valid');
+            }
+        }
+
+        function setupToken() {
+            const token = prompt('يرجى إدخال GitHub Personal Access Token للنشر:');
+            if (token) {
+                localStorage.setItem('gh_token', token);
+                checkToken();
+            }
+        }
+
+        window.onload = checkToken;
+    </script>
+</body>
+</html>
