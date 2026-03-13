@@ -23,6 +23,40 @@ let state = {
 };
 
 // ═══════════════════════════════════════════
+//  UTILITIES
+// ═══════════════════════════════════════════
+
+/**
+ * Extracts the repo-relative page path from a full URL pathname.
+ * GitHub Pages URLs look like: /daam-website/index.html
+ * We need just: index.html
+ */
+function extractPagePath(fullPathname) {
+    // The base path for GitHub Pages is /<repo-name>/
+    const repoBase = '/' + CONFIG.repo + '/';
+    let path = fullPathname || '';
+    
+    // Strip the repo base if present
+    if (path.indexOf(repoBase) !== -1) {
+        path = path.substring(path.indexOf(repoBase) + repoBase.length);
+    }
+    
+    // Strip any leading slashes
+    path = path.replace(/^\/+/, '');
+    
+    // Default to index.html if empty
+    if (!path || path === '' || path.endsWith('/')) {
+        path = (path || '') + 'index.html';
+    }
+    
+    // Remove trailing slashes before index.html check
+    path = path.replace(/\/+$/, '') || 'index.html';
+    
+    console.log('[Admin] extractPagePath:', fullPathname, '->', path);
+    return path;
+}
+
+// ═══════════════════════════════════════════
 //  AUTHENTICATION
 // ═══════════════════════════════════════════
 
@@ -121,12 +155,15 @@ function startEditorSession() {
 async function loadPageInEditor(pagePath) {
     if (state.changes > 0) {
         if (!confirm('لديك تعديلات غير محفوظة. هل تريد الانتقال لصفحة أخرى وفقدان التعديلات؟')) {
-            // Revert iframe navigation if possible
             return;
         }
     }
 
     showLoading('جاري تهيئة الصفحة...');
+    
+    // Ensure pagePath is clean (no repo prefix, no leading slashes)
+    pagePath = pagePath.replace(/^\/+/, '');
+    
     state.currentPage = pagePath;
     document.getElementById('currentPageLabel').textContent = pagePath;
     state.changes = 0;
@@ -134,8 +171,8 @@ async function loadPageInEditor(pagePath) {
 
     try {
         // Fetch raw HTML from GitHub for the base save state
-        const apiPath = pagePath.replace(/^\/+/, '');
-        const res = await fetch(`https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/${apiPath}?ref=${CONFIG.branch}`, {
+        console.log('[Admin] Fetching from GitHub API: contents/' + pagePath);
+        const res = await fetch(`https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/${pagePath}?ref=${CONFIG.branch}`, {
             headers: { 'Authorization': `token ${state.token}` }
         });
 
@@ -143,29 +180,32 @@ async function loadPageInEditor(pagePath) {
             const data = await res.json();
             state.currentPageSha = data.sha;
             state.originalHTML = decodeBase64(data.content);
+            console.log('[Admin] Fetched OK. SHA:', data.sha);
         } else {
-            console.warn('Could not fetch source from GitHub for ' + apiPath);
+            const errData = await res.json();
+            console.warn('[Admin] Could not fetch source from GitHub for', pagePath, errData);
         }
 
-        // Load page in iframe
-        const origin = window.location.origin;
-        const sitePath = window.location.pathname.replace(/\/admin\/.*$/, '/');
-        const liveUrl = `${origin}${sitePath}${pagePath}`;
-        
+        // Load page in iframe using the live GitHub Pages URL
+        const liveBaseUrl = `https://${CONFIG.owner.toLowerCase()}.github.io/${CONFIG.repo}/`;
+        const liveUrl = liveBaseUrl + pagePath;
+        console.log('[Admin] Loading iframe:', liveUrl);
+
         const iframe = document.getElementById('editorFrame');
         
         iframe.onload = () => {
             setTimeout(() => {
-                injectAdminBehaviors(iframe);
-                applyModeState(); // Apply current mode (browse vs edit)
+                try {
+                    injectAdminBehaviors(iframe);
+                    applyModeState();
+                } catch(e) {
+                    console.warn('[Admin] Could not inject into iframe:', e.message);
+                }
                 hideLoading();
             }, 500);
         };
         
-        // Only set src if it's different to avoid double-loading on organic navigation
-        if (!iframe.src.includes(liveUrl)) {
-            iframe.src = liveUrl;
-        }
+        iframe.src = liveUrl;
 
     } catch (err) {
         hideLoading();
@@ -183,17 +223,21 @@ function toggleMode() {
 
 function applyModeState() {
     const iframe = document.getElementById('editorFrame');
-    const doc = iframe.contentDocument || iframe.contentWindow.document;
-    if (!doc) return;
+    try {
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        if (!doc || !doc.body) return;
 
-    if (state.isEditMode) {
-        doc.body.classList.add('ai-edit-mode');
-        document.getElementById('editLabel').classList.add('active-mode');
-        document.getElementById('browseLabel').classList.remove('active-mode');
-    } else {
-        doc.body.classList.remove('ai-edit-mode');
-        document.getElementById('browseLabel').classList.add('active-mode');
-        document.getElementById('editLabel').classList.remove('active-mode');
+        if (state.isEditMode) {
+            doc.body.classList.add('ai-edit-mode');
+            document.getElementById('editLabel').classList.add('active-mode');
+            document.getElementById('browseLabel').classList.remove('active-mode');
+        } else {
+            doc.body.classList.remove('ai-edit-mode');
+            document.getElementById('browseLabel').classList.add('active-mode');
+            document.getElementById('editLabel').classList.remove('active-mode');
+        }
+    } catch(e) {
+        console.warn('[Admin] Cannot access iframe document:', e.message);
     }
 }
 
@@ -202,26 +246,44 @@ function injectAdminBehaviors(iframe) {
     const doc = win.document;
     if (!doc || doc.getElementById('ai-admin-styles')) return; // Already injected
 
-    // Track intra-site navigation so we know what page we're on
-    win.addEventListener('unload', () => {
-        showLoading('جاري الانتقال...');
-    });
+    // Intercept link clicks for navigation tracking
+    doc.addEventListener('click', (e) => {
+        const link = e.target.closest('a');
+        if (!link) return;
 
-    win.addEventListener('DOMContentLoaded', () => {
-        const currentPath = win.location.pathname.replace(window.location.pathname.replace(/\/admin\/.*$/, '/'), '') || 'index.html';
-        if (currentPath !== state.currentPage) {
-            loadPageInEditor(currentPath);
+        if (state.isEditMode) {
+            // In edit mode, block all navigation
+            e.preventDefault();
+            e.stopPropagation();
+            return;
         }
-    });
-    // Check path immediately in case it loaded fast
-    const currentPath = win.location.pathname.replace(window.location.pathname.replace(/\/admin\/.*$/, '/'), '') || 'index.html';
-    if (currentPath !== state.currentPage && currentPath !== 'blank') {
-         // Update internal state without reloading iframe
-         state.currentPage = currentPath;
-         document.getElementById('currentPageLabel').textContent = currentPath;
-         // Background fetch GitHub state
-         fetchGithubState(currentPath);
-    }
+
+        // In browse mode, intercept internal links to track page changes
+        const href = link.getAttribute('href');
+        if (href && !href.startsWith('http') && !href.startsWith('#') && !href.startsWith('mailto:')) {
+            e.preventDefault();
+            
+            // Resolve the href relative to the current page
+            let newPage = href;
+            if (newPage.startsWith('./')) newPage = newPage.substring(2);
+            if (newPage.startsWith('../')) {
+                // Handle relative up paths
+                const parts = state.currentPage.split('/');
+                parts.pop();
+                newPage = newPage.replace(/^\.\.\//, '');
+                newPage = parts.length > 0 ? parts.join('/') + '/' + newPage : newPage;
+            }
+            newPage = newPage.replace(/^\/+/, '');
+            
+            console.log('[Admin] Navigating to:', newPage);
+            loadPageInEditor(newPage);
+        } else if (href && href.startsWith('#')) {
+            // Allow anchor scrolling
+        } else if (href && href.startsWith('http')) {
+            // External links - do nothing
+            e.preventDefault();
+        }
+    }, true);
 
     // Inject Styles for Edit Mode
     const style = doc.createElement('style');
@@ -253,7 +315,6 @@ function injectAdminBehaviors(iframe) {
             outline-offset: 2px !important;
             filter: brightness(0.85);
         }
-        /* Disable pointer events on links inside editable areas during edit mode */
         body.ai-edit-mode a[data-ai-editable] {
             cursor: text !important;
         }
@@ -261,29 +322,25 @@ function injectAdminBehaviors(iframe) {
     doc.head.appendChild(style);
 
     // Annotate Text Elements
-    const textSelectors = 'h1, h2, h3, h4, h5, h6, p, li, blockquote, span:not(.fas):not(.fab), a, .btn, .btn-primary, .btn-secondary, .section-title h4';
+    const textSelectors = 'h1, h2, h3, h4, h5, h6, p, li, blockquote, span:not(.fas):not(.fab):not(.far), a, .btn, .btn-primary, .btn-secondary, td, th, label, figcaption';
     const textElements = doc.querySelectorAll(textSelectors);
     
     textElements.forEach(el => {
         if (el.tagName === 'SCRIPT' || el.tagName === 'STYLE') return;
+        if (el.children.length > 3) return; // Skip containers with many children
         
         el.setAttribute('data-ai-editable', 'true');
         el.setAttribute('spellcheck', 'false');
         el.dataset.originalText = el.innerHTML;
 
-        // Make contenteditable only when focused, logic handled via click to prevent breaking layouts accidentally
         el.addEventListener('click', (e) => {
-            if (!state.isEditMode) return; // Let links work naturally in browse mode
-            
-            // Prevent link navigation in edit mode
+            if (!state.isEditMode) return;
             e.preventDefault();
             e.stopPropagation();
-            
             el.setAttribute('contenteditable', 'true');
             el.focus();
         });
 
-        // Track changes
         el.addEventListener('input', () => {
             if (el.innerHTML !== el.dataset.originalText) {
                 el.classList.add('edited');
@@ -294,26 +351,15 @@ function injectAdminBehaviors(iframe) {
             }
         });
 
-        // Clean up contenteditable on blur
         el.addEventListener('blur', () => {
             el.removeAttribute('contenteditable');
         });
     });
 
-    // Handle Link blocking globally for Edit Mode
-    doc.addEventListener('click', (e) => {
-        if (state.isEditMode) {
-            const link = e.target.closest('a');
-            if (link) {
-                e.preventDefault();
-            }
-        }
-    }, true); // Use capture phase
-
     // Annotate Images
     const images = doc.querySelectorAll('img');
     images.forEach(img => {
-        if (img.naturalWidth > 0 && img.naturalWidth < 30) return; // Skip icons
+        if (img.naturalWidth > 0 && img.naturalWidth < 30) return;
 
         img.setAttribute('data-ai-img', 'true');
         img.dataset.originalSrc = img.getAttribute('src');
@@ -322,8 +368,6 @@ function injectAdminBehaviors(iframe) {
             if (!state.isEditMode) return;
             e.preventDefault();
             e.stopPropagation();
-            
-            // Tell parent window to open image modal
             window.parent.openImageModal(img);
         });
     });
@@ -354,24 +398,9 @@ function updateChangeUI() {
     }
 }
 
-async function fetchGithubState(path) {
-    try {
-        const apiPath = path.replace(/^\/+/, '');
-        const res = await fetch(`https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/${apiPath}?ref=${CONFIG.branch}`, {
-            headers: { 'Authorization': `token ${state.token}` }
-        });
-        if (res.ok) {
-            const data = await res.json();
-            state.currentPageSha = data.sha;
-            state.originalHTML = decodeBase64(data.content);
-        }
-    } catch(e) {}
-}
-
 // ═══════════════════════════════════════════
 //  IMAGE MODAL
 // ═══════════════════════════════════════════
-// Needs to be exposed globally so iframe can call it
 window.openImageModal = function(imgEl) {
     state.pendingImageTarget = imgEl;
     const modal = document.getElementById('imageModal');
@@ -407,7 +436,6 @@ function confirmImageReplace() {
     img.dataset.newImageData = state.pendingImageData.dataUrl;
     img.dataset.newImageName = state.pendingImageData.name;
     
-    // Iframe doc
     const doc = document.getElementById('editorFrame').contentDocument;
     recountChanges(doc);
     closeImageModal();
@@ -436,14 +464,13 @@ async function saveChanges() {
         const imageMap = new Map();
         for (const img of changedImages) {
             const base64Data = img.dataset.newImageData.split(',')[1];
-            // Format extension
             const ext = img.dataset.newImageName.split('.').pop();
             const safeName = `img_${Date.now()}.${ext}`;
             const uploadPath = `assets/images/${safeName}`;
             
+            console.log('[Admin] Uploading image:', uploadPath);
             await githubCreateOrUpdateFile(uploadPath, base64Data, `Admin Upload: ${uploadPath}`);
             
-            // Map the old src to the new relative path
             const relPathPrefix = state.currentPage.includes('/') ? '../' : '';
             imageMap.set(img.dataset.originalSrc, `${relPathPrefix}assets/images/${safeName}`);
         }
@@ -452,20 +479,30 @@ async function saveChanges() {
         let updatedHTML = state.originalHTML;
         const editedElements = doc.querySelectorAll('[data-ai-editable].edited');
         for (const el of editedElements) {
-            updatedHTML = updatedHTML.replace(el.dataset.originalText, cleanEditableHTML(el.innerHTML));
+            const cleanOriginal = el.dataset.originalText;
+            const cleanNew = cleanEditableHTML(el.innerHTML);
+            if (cleanOriginal && updatedHTML.includes(cleanOriginal)) {
+                updatedHTML = updatedHTML.replace(cleanOriginal, cleanNew);
+            }
         }
         
         for (const [oldSrc, newPath] of imageMap) {
             updatedHTML = updatedHTML.replace(new RegExp(escapeRegExp(oldSrc), 'g'), newPath);
         }
 
-        const apiPath = state.currentPage.replace(/^\/+/, '');
-        await githubCreateOrUpdateFile(apiPath, encodeBase64(updatedHTML), `Admin Content Update: ${apiPath}`, state.currentPageSha);
+        // 3. Publish to GitHub
+        const apiPath = state.currentPage;
+        console.log('[Admin] Publishing to GitHub: contents/' + apiPath, 'SHA:', state.currentPageSha);
+        
+        // Re-fetch SHA right before saving to avoid conflicts
+        const freshSha = await getFreshSha(apiPath);
+        
+        await githubCreateOrUpdateFile(apiPath, encodeBase64(updatedHTML), `Admin Content Update: ${apiPath}`, freshSha);
         
         hideLoading();
-        showToast('تم النشر بنجاح!', 'success');
+        showToast('تم النشر بنجاح! ✅', 'success');
         
-        // Reset changes state without reloading iframe completely
+        // Reset changes state
         state.changes = 0;
         state.originalHTML = updatedHTML;
         editedElements.forEach(el => {
@@ -480,12 +517,32 @@ async function saveChanges() {
         
     } catch (err) {
         hideLoading();
+        console.error('[Admin] Publish error:', err);
         showToast('فشل النشر: ' + err.message, 'error');
     }
 }
 
+async function getFreshSha(path) {
+    try {
+        const res = await fetch(`https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/${path}?ref=${CONFIG.branch}`, {
+            headers: { 'Authorization': `token ${state.token}` }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            return data.sha;
+        }
+    } catch(e) {}
+    return state.currentPageSha;
+}
+
 function cleanEditableHTML(html) {
-    return html.replace(/contenteditable="true"/g, '').replace(/data-ai-editable="true"/g, '').replace(/class="edited"/g, '').replace(/spellcheck="false"/g, '').trim();
+    return html
+        .replace(/\s*contenteditable="true"/g, '')
+        .replace(/\s*data-ai-editable="true"/g, '')
+        .replace(/\s*data-ai-img="true"/g, '')
+        .replace(/\s*class="edited"/g, '')
+        .replace(/\s*spellcheck="false"/g, '')
+        .trim();
 }
 
 function escapeRegExp(string) {
@@ -512,12 +569,19 @@ async function githubCreateOrUpdateFile(path, base64Content, message, sha = null
     const body = { message, content: base64Content, branch: CONFIG.branch };
     if (sha) body.sha = sha;
 
+    console.log('[Admin] GitHub API PUT:', url, 'SHA:', sha ? sha : '(new file)');
+    
     const res = await fetch(url, {
         method: 'PUT',
         headers: { 'Authorization': `token ${state.token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
     });
-    if (!res.ok) throw new Error(await res.text());
+    
+    if (!res.ok) {
+        const errText = await res.text();
+        console.error('[Admin] GitHub API Error:', res.status, errText);
+        throw new Error(errText);
+    }
     return await res.json();
 }
 
