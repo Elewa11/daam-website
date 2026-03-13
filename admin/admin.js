@@ -6,7 +6,7 @@ const CONFIG = {
     owner: 'Elewa11',
     repo: 'daam-website',
     branch: 'main',
-    passwordHash: '90230ee1405515aa19246cbc88f1754a49ac5a3bb2968dfe00778ea452bdc229',
+    passwordHash: '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9',
 };
 
 let state = {
