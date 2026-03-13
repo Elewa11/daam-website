@@ -134,7 +134,7 @@ async function loadPageInEditor(pagePath) {
 
     try {
         // Fetch raw HTML from GitHub for the base save state
-        const apiPath = pagePath.startsWith('/') ? pagePath.substring(1) : pagePath;
+        const apiPath = pagePath.replace(/^\/+/, '');
         const res = await fetch(`https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/${apiPath}?ref=${CONFIG.branch}`, {
             headers: { 'Authorization': `token ${state.token}` }
         });
@@ -356,7 +356,7 @@ function updateChangeUI() {
 
 async function fetchGithubState(path) {
     try {
-        const apiPath = path.startsWith('/') ? path.substring(1) : path;
+        const apiPath = path.replace(/^\/+/, '');
         const res = await fetch(`https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/${apiPath}?ref=${CONFIG.branch}`, {
             headers: { 'Authorization': `token ${state.token}` }
         });
@@ -459,7 +459,7 @@ async function saveChanges() {
             updatedHTML = updatedHTML.replace(new RegExp(escapeRegExp(oldSrc), 'g'), newPath);
         }
 
-        const apiPath = state.currentPage.startsWith('/') ? state.currentPage.substring(1) : state.currentPage;
+        const apiPath = state.currentPage.replace(/^\/+/, '');
         await githubCreateOrUpdateFile(apiPath, encodeBase64(updatedHTML), `Admin Content Update: ${apiPath}`, state.currentPageSha);
         
         hideLoading();
