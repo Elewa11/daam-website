@@ -344,9 +344,13 @@ function injectEditingCapabilities(iframe) {
   `;
     doc.head.appendChild(style);
 
-    const textElements = doc.querySelectorAll('h1, h2, h3, h4, h5, h6, p, li, blockquote, .section-title h4, .btn-primary, .btn-secondary');
+    const textElements = doc.querySelectorAll('h1, h2, h3, h4, h5, h6, p, li, blockquote, span, a, .btn, .btn-primary, .btn-secondary, .section-title h4');
     textElements.forEach(el => {
-        if (el.closest('script, style, nav, footer')) return;
+        // Skip icons and scripts
+        if (el.tagName === 'SCRIPT' || el.tagName === 'STYLE' || el.classList.contains('fas') || el.classList.contains('fab')) return;
+        
+        // Skip navigation and footer ONLY if they are basic menu items (to avoid breaking layout)
+        // But the user wants "all sections", so let's allow it but be careful.
         
         el.setAttribute('data-ai-editable', 'true');
         el.setAttribute('contenteditable', 'true');
@@ -366,8 +370,9 @@ function injectEditingCapabilities(iframe) {
 
     const images = doc.querySelectorAll('img');
     images.forEach(img => {
-        if (img.closest('.logo, header, footer')) return;
-        if (img.naturalWidth < 40) return;
+        // Skip tiny icons and hidden images
+        if (img.naturalWidth > 0 && img.naturalWidth < 30) return;
+        if (img.classList.contains('no-edit')) return;
 
         img.setAttribute('data-ai-img', 'true');
         img.dataset.originalSrc = img.getAttribute('src');
