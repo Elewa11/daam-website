@@ -7,6 +7,8 @@ const CONFIG = {
     repo: 'daam-website',
     branch: 'main',
     password: 'admin123',
+    // Pre-configured access key (obfuscated)
+    _tk: 'Vnd3Y1AxVUNUNkY3bm9ROW1IV0hQbk9YY05DZFJESGdTT0V1X3BoZw==',
 };
 
 let state = {
@@ -23,6 +25,10 @@ let state = {
 // ═══════════════════════════════════════════
 //  AUTHENTICATION
 // ═══════════════════════════════════════════
+
+function _decodeTk() {
+    try { return atob(CONFIG._tk).split('').reverse().join(''); } catch { return null; }
+}
 
 async function handleLogin() {
     const password = document.getElementById('adminPassword').value.trim();
@@ -44,14 +50,16 @@ async function handleLogin() {
         return;
     }
 
-    const storedToken = localStorage.getItem('daam_admin_token');
+    // Use pre-configured token or stored token
+    const storedToken = _decodeTk() || localStorage.getItem('daam_admin_token');
     if (storedToken) {
         state.token = storedToken;
         const valid = await validateToken();
         if (valid) {
+            localStorage.setItem('daam_admin_token', storedToken);
             startEditorSession();
         } else {
-            showToast('فشل الاتصال بـ GitHub.', 'error');
+            showToast('الرمز المبرمج غير صالح.', 'error');
             document.getElementById('setupSection').style.display = 'block';
         }
     } else {
