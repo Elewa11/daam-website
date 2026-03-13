@@ -193,7 +193,21 @@ async function loadPageInEditor(pagePath) {
 
         const iframe = document.getElementById('editorFrame');
         
+        // Safety timeout: always hide loading after 5 seconds
+        const safetyTimeout = setTimeout(() => {
+            console.log('[Admin] Safety timeout triggered - hiding loading overlay');
+            try {
+                injectAdminBehaviors(iframe);
+                applyModeState();
+            } catch(e) {
+                console.warn('[Admin] Could not inject (safety):', e.message);
+            }
+            hideLoading();
+        }, 5000);
+        
         iframe.onload = () => {
+            console.log('[Admin] iframe onload fired');
+            clearTimeout(safetyTimeout);
             setTimeout(() => {
                 try {
                     injectAdminBehaviors(iframe);
@@ -202,7 +216,7 @@ async function loadPageInEditor(pagePath) {
                     console.warn('[Admin] Could not inject into iframe:', e.message);
                 }
                 hideLoading();
-            }, 500);
+            }, 800);
         };
         
         iframe.src = liveUrl;
