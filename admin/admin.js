@@ -6,7 +6,7 @@ const CONFIG = {
     owner: 'Elewa11',
     repo: 'daam-website',
     branch: 'main',
-    passwordHash: '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9',
+    password: 'admin123',
 };
 
 let state = {
@@ -23,11 +23,6 @@ let state = {
 // ═══════════════════════════════════════════
 //  AUTHENTICATION
 // ═══════════════════════════════════════════
-async function hashPassword(password) {
-    const encoded = new TextEncoder().encode(password);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', encoded);
-    return Array.from(new Uint8Array(hashBuffer)).map(x => x.toString(16).padStart(2, '0')).join('');
-}
 
 async function handleLogin() {
     const password = document.getElementById('adminPassword').value.trim();
@@ -41,8 +36,7 @@ async function handleLogin() {
     btnLoader.style.display = 'inline-block';
     errorEl.style.display = 'none';
 
-    const hash = await hashPassword(password);
-    if (hash !== CONFIG.passwordHash) {
+    if (password !== CONFIG.password) {
         errorEl.textContent = 'كلمة المرور غير صحيحة.';
         errorEl.style.display = 'block';
         btnText.style.display = 'inline';
