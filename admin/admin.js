@@ -510,9 +510,33 @@ function injectAdminBehaviors(iframe) {
     `;
     doc.body.appendChild(toolbar);
 
+    // Track the currently active range/selection
+    let lastRange = null;
+    function saveSelection() {
+        const sel = doc.getSelection();
+        if (sel.rangeCount > 0) {
+            lastRange = sel.getRangeAt(0);
+        }
+    }
+    function restoreSelection() {
+        if (!lastRange) return;
+        const sel = doc.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(lastRange);
+    }
+
+    doc.addEventListener('mouseup', saveSelection);
+    doc.addEventListener('keyup', saveSelection);
+
     // CRITICAL: Prevent toolbar from stealing focus/selection
     toolbar.addEventListener('mousedown', (e) => {
-        e.preventDefault(); // This keeps the text selection alive!
+        // If it's a color picker wrap or input, don't prevent default as it blocks the dialog
+        // Instead, just make sure we have the latest selection
+        if (e.target.closest('.color-picker-wrap')) {
+            saveSelection();
+        } else {
+            e.preventDefault(); // This keeps the text selection alive for buttons
+        }
     });
 
     // Handle button clicks
@@ -520,7 +544,9 @@ function injectAdminBehaviors(iframe) {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
             const cmd = btn.dataset.cmd;
+            restoreSelection(); // Ensure we have it
             doc.execCommand(cmd, false, null);
+            saveSelection(); // Update it
             // Mark as edited
             const focused = doc.querySelector('[contenteditable="true"]');
             if (focused) {
@@ -533,12 +559,15 @@ function injectAdminBehaviors(iframe) {
     // Handle select (font size)
     toolbar.querySelectorAll('select[data-cmd]').forEach(sel => {
         sel.addEventListener('mousedown', (e) => {
+            saveSelection();
             e.stopPropagation(); // Allow select to open
         });
         sel.addEventListener('change', (e) => {
             if (sel.value) {
+                restoreSelection();
                 doc.execCommand(sel.dataset.cmd, false, sel.value);
                 sel.value = '';
+                saveSelection();
                 const focused = doc.querySelector('[contenteditable="true"]');
                 if (focused) {
                     focused.classList.add('edited');
@@ -551,10 +580,13 @@ function injectAdminBehaviors(iframe) {
     // Handle color inputs
     toolbar.querySelectorAll('input[data-cmd]').forEach(colorInput => {
         colorInput.addEventListener('mousedown', (e) => {
+            saveSelection();
             e.stopPropagation(); // Allow color picker to open
         });
         colorInput.addEventListener('input', (e) => {
+            restoreSelection();
             doc.execCommand(colorInput.dataset.cmd, false, colorInput.value);
+            saveSelection();
             const focused = doc.querySelector('[contenteditable="true"]');
             if (focused) {
                 focused.classList.add('edited');
@@ -577,6 +609,7 @@ function injectAdminBehaviors(iframe) {
     // Show toolbar when text is selected
     doc.addEventListener('mouseup', () => {
         if (!state.isEditMode) return;
+        saveSelection();
         const sel = doc.getSelection();
         if (sel && sel.toString().trim().length > 0) {
             toolbar.classList.add('visible');
@@ -591,6 +624,7 @@ function injectAdminBehaviors(iframe) {
         
         // Delay hide to let click handler finish
         setTimeout(() => {
+            if (doc.activeElement && doc.activeElement.closest('#ai-text-toolbar')) return;
             toolbar.classList.remove('visible');
             activeEditable = null;
         }, 300);
