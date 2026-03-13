@@ -1,166 +1,175 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم مؤسسة دعم</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        :root {
-            --primary: #004aad;
-            --secondary: #28a745;
-            --dark: #1e293b;
-            --light: #f8fafc;
-        }
-        body {
-            font-family: 'Tajawal', sans-serif;
-            background: var(--light);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            height: 100vh;
-        }
-        .sidebar {
-            width: 280px;
-            background: var(--dark);
-            color: white;
-            padding: 30px 20px;
-            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
-        }
-        .sidebar h2 {
-            font-size: 1.5rem;
-            margin-bottom: 40px;
-            text-align: center;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            padding-bottom: 20px;
-        }
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 15px;
-            color: rgba(255,255,255,0.7);
-            text-decoration: none;
-            border-radius: 10px;
-            transition: all 0.3s;
-            margin-bottom: 10px;
-        }
-        .nav-item:hover, .nav-item.active {
-            background: var(--primary);
-            color: white;
-        }
-        .main-content {
-            flex: 1;
-            padding: 50px;
-            overflow-y: auto;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 40px;
-        }
-        .page-card {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
-            border: 1px solid #e2e8f0;
-        }
-        .page-info h3 { margin: 0; font-size: 1.25rem; }
-        .page-info p { margin: 5px 0 0; color: #64748b; font-size: 0.9rem; }
-        .btn {
-            padding: 10px 20px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 700;
-            cursor: pointer;
-            transition: opacity 0.3s;
-            border: none;
-        }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-secondary { background: var(--secondary); color: white; }
-        .token-status {
-            font-size: 0.85rem;
-            padding: 5px 12px;
-            border-radius: 20px;
-            background: #ffe4e6;
-            color: #e11d48;
-        }
-        .token-status.valid {
-            background: #dcfce7;
-            color: #15803d;
-        }
-    </style>
+    <title>لوحة تحكم مؤسسة دعم — محرر المحتوى</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;600;700;800&display=swap">
+    <link rel="stylesheet" href="admin.css">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="../assets/images/favicon.png">
 </head>
+
 <body>
-    <div class="sidebar">
-        <h2>لوحة التحكم</h2>
-        <a href="index.html" class="nav-item active">
-            <i class="fas fa-home"></i> صفحات الموقع
-        </a>
-        <a href="#" class="nav-item" onclick="setupToken()">
-            <i class="fas fa-key"></i> إعدادات النشر
-        </a>
-    </div>
-    <div class="main-content">
-        <div class="header">
-            <h1>إدارة الصفحات</h1>
-            <div id="token-indicator" class="token-status">جاري التحقق من التشفير...</div>
-        </div>
+    <!-- ============ LOGIN SCREEN ============ -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-bg-pattern"></div>
+        <div class="login-card">
+            <div class="login-logo">
+                <img src="../assets/images/logo_header.png" alt="Daam Foundation" height="70" style="filter: brightness(0) invert(1);">
+            </div>
+            <h1 class="login-title">محرر المحتوى</h1>
+            <p class="login-subtitle">تعديل محتوى الموقع بسهولة ويسر</p>
 
-        <div class="page-list">
-            <div class="page-card">
-                <div class="page-info">
-                    <h3>الصفحة الرئيسية</h3>
-                    <p>index.html</p>
+            <div class="login-form">
+                <div class="input-group">
+                    <label for="adminPassword">كلمة المرور</label>
+                    <input type="password" id="adminPassword" placeholder="أدخل كلمة المرور"
+                        autocomplete="current-password">
                 </div>
-                <a href="editor.html?page=index.html" class="btn btn-primary">تعديل بصري <i class="fas fa-edit"></i></a>
+                <button id="loginBtn" class="btn-login" onclick="handleLogin()">
+                    <span class="btn-text">تسجيل الدخول</span>
+                    <span class="btn-loader" style="display:none"></span>
+                </button>
+                <p id="loginError" class="login-error" style="display:none">كلمة المرور غير صحيحة. حاول مرة أخرى.</p>
             </div>
-            <div class="page-card">
-                <div class="page-info">
-                    <h3>من نحن</h3>
-                    <p>about.html</p>
+
+            <div id="setupSection" class="setup-section" style="display:none">
+                <div class="setup-divider"><span>الإعداد لأول مرة</span></div>
+                <p class="setup-desc">أدخل رمز الوصول الخاص بـ GitHub لتفعيل الحفظ:</p>
+                <div class="input-group">
+                    <label for="githubToken">GitHub Token</label>
+                    <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxx">
                 </div>
-                <a href="editor.html?page=about.html" class="btn btn-primary">تعديل بصري <i class="fas fa-edit"></i></a>
-            </div>
-            <div class="page-card">
-                <div class="page-info">
-                    <h3>برامجنا</h3>
-                    <p>programs.html</p>
-                </div>
-                <a href="editor.html?page=programs.html" class="btn btn-primary">تعديل بصري <i class="fas fa-edit"></i></a>
+                <button class="btn-setup" onclick="saveSetup()">حفظ الإعدادات</button>
             </div>
         </div>
     </div>
 
-    <script>
-        function checkToken() {
-            const token = localStorage.getItem('gh_token');
-            const indicator = document.getElementById('token-indicator');
-            if (token) {
-                indicator.innerText = 'نظام النشر متصل ✅';
-                indicator.classList.add('valid');
-            } else {
-                indicator.innerText = 'مطلوب مفتاح النشر ⚠️';
-                indicator.classList.remove('valid');
-            }
-        }
+    <!-- ============ MAIN DASHBOARD ============ -->
+    <div id="dashboard" class="dashboard" style="display:none">
+        <!-- Top Bar -->
+        <header class="admin-header">
+            <div class="admin-header-left">
+                <img src="../assets/images/logo_header.png" alt="Daam Foundation" height="40" style="filter: brightness(0) invert(1);">
+                <span class="admin-header-title">محرر المحتوى</span>
+            </div>
+            <div class="admin-header-right">
+                <span id="statusIndicator" class="status-indicator">
+                    <span class="status-dot status-dot-ok"></span>
+                    متصل
+                </span>
+                <button class="btn-logout" onclick="handleLogout()">خروج</button>
+            </div>
+        </header>
 
-        function setupToken() {
-            const token = prompt('يرجى إدخال GitHub Personal Access Token للنشر:');
-            if (token) {
-                localStorage.setItem('gh_token', token);
-                checkToken();
-            }
-        }
+        <!-- Page Selection View -->
+        <div id="pageListView" class="page-list-view">
+            <div class="page-list-header">
+                <h2>اختر صفحة لتعديلها</h2>
+                <p>اضغط على أي صفحة أدناه لبدء تعديل محتواها</p>
+            </div>
 
-        window.onload = checkToken;
-    </script>
+            <div class="page-tabs">
+                <button class="page-tab active" data-lang="ar" onclick="filterPages('ar')">صفحات اللغة العربية</button>
+                <button class="page-tab" data-lang="en" onclick="filterPages('en')">English Pages</button>
+            </div>
+
+            <div id="pageGrid" class="page-grid">
+                <!-- Pages are populated by JS -->
+            </div>
+        </div>
+
+        <!-- Editor View -->
+        <div id="editorView" class="editor-view" style="display:none">
+            <div class="editor-toolbar">
+                <button class="btn-back" onclick="closeEditor()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                    العودة للصفحات
+                </button>
+                <span id="editorPageName" class="editor-page-name">index.html</span>
+                <div class="editor-actions">
+                    <span id="changeCounter" class="change-counter" style="display:none">0 تغييرات</span>
+                    <button id="btnUndo" class="btn-editor btn-undo" onclick="undoChanges()" style="display:none">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="1 4 1 10 7 10"></polyline>
+                            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                        </svg>
+                        تراجع للكل
+                    </button>
+                    <button id="btnSave" class="btn-editor btn-save" onclick="saveChanges()" disabled>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                            <polyline points="7 3 7 8 15 8"></polyline>
+                        </svg>
+                        نشر التعديلات
+                    </button>
+                </div>
+            </div>
+
+            <div class="editor-hint">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <span><strong>اضغط على أي نص</strong> لتعديله. <strong>اضغط على أي صورة</strong> لاستبدالها. عند الانتهاء، اضغط على <strong>"نشر التعديلات"</strong>.</span>
+            </div>
+
+            <div class="editor-frame-wrapper">
+                <iframe id="editorFrame" class="editor-frame"
+                    sandbox="allow-same-origin allow-forms allow-modals"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast" style="display:none">
+        <span id="toastIcon" class="toast-icon"></span>
+        <span id="toastMessage" class="toast-message"></span>
+    </div>
+
+    <!-- Image Upload Modal -->
+    <div id="imageModal" class="modal-overlay" style="display:none">
+        <div class="modal-card">
+            <h3>استبدال الصورة</h3>
+            <p>اختر صورة جديدة لاستبدال الصورة الحالية:</p>
+            <div class="modal-preview">
+                <img id="modalPreview" src="" alt="Preview">
+            </div>
+            <div class="modal-upload-area" id="dropZone">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <p>اسحب الصورة هنا، أو <strong>اضغط للتصفح</strong></p>
+                <input type="file" id="imageInput" accept="image/*" style="display:none">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-modal btn-modal-cancel" onclick="closeImageModal()">إلغاء</button>
+                <button class="btn-modal btn-modal-confirm" id="btnConfirmImage" onclick="confirmImageReplace()"
+                    disabled>استخدم هذه الصورة</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display:none">
+        <div class="loading-spinner"></div>
+        <p id="loadingText">جاري نشر التعديلات...</p>
+    </div>
+
+    <script src="admin.js"></script>
 </body>
+
 </html>
