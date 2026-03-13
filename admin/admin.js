@@ -377,65 +377,87 @@ function injectAdminBehaviors(iframe) {
             display: flex !important;
         }
 
-        /* ── Floating Rich Text Toolbar ── */
+        /* ── Floating Rich Text Toolbar (Redesigned) ── */
         #ai-text-toolbar {
             position: fixed;
             top: -100px;
             left: 50%;
             transform: translateX(-50%);
-            background: #1e293b;
-            border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 12px;
-            padding: 6px 10px;
+            background: #0f172a;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 5px 8px;
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 2px;
             z-index: 99999;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
-            transition: top 0.25s ease;
-            flex-wrap: wrap;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            transition: top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            flex-wrap: nowrap;
+            height: 40px;
         }
-        #ai-text-toolbar.visible { top: 10px; }
+        #ai-text-toolbar.visible { top: 12px; }
         #ai-text-toolbar button {
             background: transparent;
-            color: #e2e8f0;
+            color: #f1f5f9;
             border: 1px solid transparent;
             width: 32px;
             height: 32px;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 15px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: 0.15s;
+            transition: all 0.2s;
+            font-weight: 600;
         }
-        #ai-text-toolbar button:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
-        #ai-text-toolbar button.active { background: #2563eb; color: white; }
+        #ai-text-toolbar button:hover { background: rgba(255,255,255,0.1); }
+        #ai-text-toolbar button.active { background: #3b82f6; color: white; }
+        
         #ai-text-toolbar .separator {
             width: 1px;
-            height: 24px;
+            height: 20px;
             background: rgba(255,255,255,0.15);
-            margin: 0 4px;
+            margin: 0 6px;
+            flex-shrink: 0;
         }
+        
         #ai-text-toolbar select {
-            background: #0f172a;
-            color: #e2e8f0;
-            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.05);
+            color: #f1f5f9;
+            border: 1px solid rgba(255,255,255,0.1);
             border-radius: 6px;
-            padding: 4px 8px;
-            font-size: 12px;
+            padding: 0 10px;
+            font-size: 13px;
             cursor: pointer;
             height: 32px;
+            min-width: 90px;
+            outline: none;
+            direction: rtl;
         }
-        #ai-text-toolbar input[type="color"] {
-            width: 32px;
-            height: 32px;
-            border: none;
-            background: transparent;
+        
+        #ai-text-toolbar .color-picker-wrap {
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255,255,255,0.2);
             cursor: pointer;
-            padding: 0;
-            border-radius: 6px;
+            position: relative;
+        }
+        #ai-text-toolbar .color-picker-wrap input[type="color"] {
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            width: 150%;
+            height: 150%;
+            cursor: pointer;
+            border: none;
+            background: none;
         }
 
         /* ── Card placeholder image areas ── */
@@ -460,17 +482,15 @@ function injectAdminBehaviors(iframe) {
     const toolbar = doc.createElement('div');
     toolbar.id = 'ai-text-toolbar';
     toolbar.innerHTML = `
-        <button data-cmd="bold" title="غامق"><b>B</b></button>
-        <button data-cmd="italic" title="مائل"><i>I</i></button>
-        <button data-cmd="underline" title="تسطير"><u>U</u></button>
-        <button data-cmd="strikeThrough" title="شطب"><s>S</s></button>
-        <div class="separator"></div>
-        <button data-cmd="justifyRight" title="محاذاة يمين">⫸</button>
-        <button data-cmd="justifyCenter" title="توسيط">☰</button>
-        <button data-cmd="justifyLeft" title="محاذاة يسار">⫷</button>
+        <div class="color-picker-wrap" title="لون الخلفية" style="background: #fbbf24;">
+            <input type="color" data-cmd="hiliteColor" value="#fbbf24" oninput="this.parentElement.style.background=this.value">
+        </div>
+        <div class="color-picker-wrap" title="لون النص" style="background: #ffffff; margin-left: 4px;">
+            <input type="color" data-cmd="foreColor" value="#ffffff" oninput="this.parentElement.style.background=this.value">
+        </div>
         <div class="separator"></div>
         <select data-cmd="fontSize" title="حجم الخط">
-            <option value="">حجم الخط</option>
+            <option value="">حجم الخط ⌄</option>
             <option value="1">صغير جداً</option>
             <option value="2">صغير</option>
             <option value="3">عادي</option>
@@ -480,12 +500,13 @@ function injectAdminBehaviors(iframe) {
             <option value="7">ضخم</option>
         </select>
         <div class="separator"></div>
-        <label title="لون النص" style="display:flex;align-items:center;gap:2px;color:#e2e8f0;font-size:11px;cursor:pointer;">
-            A <input type="color" data-cmd="foreColor" value="#ffffff" style="width:24px;height:24px;border:none;background:transparent;cursor:pointer;padding:0;">
-        </label>
-        <label title="لون الخلفية" style="display:flex;align-items:center;gap:2px;color:#e2e8f0;font-size:11px;cursor:pointer;">
-            🎨 <input type="color" data-cmd="hiliteColor" value="#ffff00" style="width:24px;height:24px;border:none;background:transparent;cursor:pointer;padding:0;">
-        </label>
+        <button data-cmd="justifyRight" title="محاذاة يمين">⫸</button>
+        <button data-cmd="justifyCenter" title="توسيط">☰</button>
+        <button data-cmd="justifyLeft" title="محاذاة يسار">⫷</button>
+        <div class="separator"></div>
+        <button data-cmd="underline" title="تسطير"><u>U</u></button>
+        <button data-cmd="italic" title="مائل"><i>/</i></button>
+        <button data-cmd="bold" title="غامق"><b>B</b></button>
     `;
     doc.body.appendChild(toolbar);
 
