@@ -91,6 +91,7 @@ async function handleLogin() {
         const valid = await validateToken();
         if (valid) {
             localStorage.setItem('daam_admin_token', storedToken);
+            localStorage.setItem('daam_admin_session', 'active');
             startEditorSession();
         } else {
             showToast('الرمز المبرمج غير صالح.', 'error');
@@ -131,6 +132,7 @@ async function validateToken() {
 
 function handleLogout() {
     state.token = null;
+    localStorage.removeItem('daam_admin_session');
     document.getElementById('editorView').style.display = 'none';
     document.getElementById('loginScreen').style.display = 'flex';
     document.getElementById('adminPassword').value = '';
@@ -141,6 +143,18 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('adminPassword').addEventListener('keydown', (e) => {
         if (e.key === 'Enter') handleLogin();
     });
+
+    // Auto-login if session exists
+    const hasSession = localStorage.getItem('daam_admin_session');
+    const storedToken = _decodeTk() || localStorage.getItem('daam_admin_token');
+    if (hasSession && storedToken) {
+        state.token = storedToken;
+        validateToken().then(valid => {
+            if (valid) {
+                startEditorSession();
+            }
+        });
+    }
 });
 
 // ═══════════════════════════════════════════
@@ -511,7 +525,13 @@ async function saveChanges() {
         // Re-fetch SHA right before saving to avoid conflicts
         const freshSha = await getFreshSha(apiPath);
         
-        await githubCreateOrUpdateFile(apiPath, encodeBase64(updatedHTML), `Admin Content Update: ${apiPath}`, freshSha);
+        const publishResult = await githubCreateOrUpdateFile(apiPath, encodeBase64(updatedHTML), `Admin Content Update: ${apiPath}`, freshSha);
+        
+        // Update SHA from GitHub response so subsequent publishes work
+        if (publishResult && publishResult.content && publishResult.content.sha) {
+            state.currentPageSha = publishResult.content.sha;
+            console.log('[Admin] Updated SHA to:', state.currentPageSha);
+        }
         
         hideLoading();
         showToast('تم النشر بنجاح! ✅', 'success');
