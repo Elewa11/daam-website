@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="انضم إلى مؤسسة دعم للتنمية المستدامة كمتطوع أو شريك وساهم في إحداث تغيير إيجابي في المجتمع.">
+    <title>انضم إلينا | مؤسسة دعم</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="icon" type="image/png" href="../assets/images/favicon.png">
+</head>
+
+<body>
+
+    <header class="site-header">
+        <div class="container nav">
+            <a href="index.html" class="nav-logo"><img src="../assets/images/logo_header_new.png" alt="مؤسسة دعم"></a>
+            <nav class="nav-menu">
+                <a href="index.html">الرئيسية</a>
+                <a href="about.html">من نحن</a>
+                <a href="programs.html">برامجنا</a>
+                <a href="projects.html">مشروعاتنا</a>
+                <a href="media.html">المركز الإعلامي</a>
+                <a href="participate.html" class="active">انضم إلينا</a>
+                <a href="contact.html">تواصل معنا</a>
+            </nav>
+            <div class="nav-actions">
+                <a href="en/participate.html" class="lang-switch"><i class="fas fa-globe"></i> EN</a>
+                <a href="participate.html" class="btn btn-accent desktop-cta">تطوع معنا</a>
+                <button class="nav-toggle" aria-label="القائمة"><span></span><span></span><span></span></button>
+            </div>
+        </div>
+    </header>
+
+    <section class="page-hero">
+        <div class="page-hero-bg"><img src="../assets/images/partnership_hands.png" alt="انضم إلينا"></div>
+        <div class="container">
+            <h1>انضم إلينا</h1>
+            <p>كن جزءاً من التغيير؛ مساهمتك تصنع الفرق في حياة الكثيرين.</p>
+            <div class="breadcrumb"><a href="index.html">الرئيسية</a> <span>/</span> <span>انضم إلينا</span></div>
+        </div>
+    </section>
+
+    <!-- Why join -->
+    <section class="section">
+        <div class="container">
+            <div class="section-head reveal">
+                <span class="eyebrow">لماذا تنضم إلينا</span>
+                <h2>انضمامك يصنع أثراً</h2>
+            </div>
+            <div class="grid-3">
+                <div class="feature-card reveal"><div class="feature-icon"><i class="fas fa-seedling"></i></div><h3>أثر حقيقي</h3><p>جهدك يصل مباشرة للفئات الأكثر احتياجاً ويحدث فرقاً ملموساً في مجتمعك.</p></div>
+                <div class="feature-card green reveal d1"><div class="feature-icon"><i class="fas fa-certificate"></i></div><h3>تطوير وشهادات</h3><p>اكتسب مهارات جديدة واحصل على شهادات خبرة وتطوع معتمدة.</p></div>
+                <div class="feature-card gold reveal d2"><div class="feature-icon"><i class="fas fa-people-group"></i></div><h3>مجتمع ملهم</h3><p>كن جزءاً من فريق شبابي شغوف يؤمن بأن التغيير يبدأ من الإنسان.</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Form -->
+    <section class="section bg-soft" id="join">
+        <div class="container">
+            <div class="section-head reveal">
+                <span class="eyebrow green">كن جزءاً من الفريق</span>
+                <h2>استمارة الانضمام إلينا</h2>
+                <p>سجّل بياناتك وانضم إلى أسرة مؤسسة دعم لنصنع الفرق معاً.</p>
+            </div>
+            <div class="form-card reveal" style="max-width:820px;margin:0 auto;">
+                <form action="#" method="POST">
+                    <div class="form-row">
+                        <div class="field"><label>الاسم الكامل <span class="req">*</span></label><input type="text" name="full_name" required placeholder="الاسم رباعي"></div>
+                        <div class="field"><label>رقم الهاتف <span class="req">*</span></label><input type="tel" name="phone" required placeholder="01xxxxxxxxx"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="field"><label>البريد الإلكتروني</label><input type="email" name="email" placeholder="example@email.com"></div>
+                        <div class="field"><label>السن</label><input type="number" name="age" min="16" max="80" placeholder="مثال: 22"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="field"><label>المؤهل الدراسي / التخصص</label><input type="text" name="qualification" placeholder="مثال: بكالوريوس تجارة"></div>
+                        <div class="field"><label>المحافظة / مكان الإقامة</label><input type="text" name="city" placeholder="مثال: بلبيس، الشرقية"></div>
+                    </div>
+                    <div class="field" style="margin-bottom:20px;">
+                        <label>كيف ترغب في الانضمام؟ <span class="req">*</span></label>
+                        <select name="join_type" required>
+                            <option value="" disabled selected>اختر نوع المشاركة</option>
+                            <option value="volunteer">متطوع</option>
+                            <option value="trainee">متدرب</option>
+                            <option value="partner">شريك / جهة داعمة</option>
+                            <option value="expert">خبير / استشاري</option>
+                        </select>
+                    </div>
+                    <div class="field" style="margin-bottom:24px;">
+                        <label>مجالات الاهتمام (يمكن اختيار أكثر من مجال)</label>
+                        <div class="checks">
+                            <label><input type="checkbox" name="interests[]" value="تنظيم الفعاليات"> تنظيم الفعاليات</label>
+                            <label><input type="checkbox" name="interests[]" value="التدريس والتدريب"> التدريس والتدريب</label>
+                            <label><input type="checkbox" name="interests[]" value="التصوير والميديا"> التصوير والميديا</label>
+                            <label><input type="checkbox" name="interests[]" value="الأبحاث الميدانية"> الأبحاث الميدانية</label>
+                            <label><input type="checkbox" name="interests[]" value="الخدمات الطبية"> الخدمات الطبية</label>
+                            <label><input type="checkbox" name="interests[]" value="التوزيع واللوجستيات"> التوزيع واللوجستيات</label>
+                            <label><input type="checkbox" name="interests[]" value="التمكين الاقتصادي"> التمكين الاقتصادي</label>
+                            <label><input type="checkbox" name="interests[]" value="المبادرات البيئية"> المبادرات البيئية</label>
+                        </div>
+                    </div>
+                    <div class="field" style="margin-bottom:24px;">
+                        <label>الوقت المتاح للتطوع</label>
+                        <select name="availability">
+                            <option value="" disabled selected>اختر مدى تفرّغك</option>
+                            <option value="weekdays">أيام الأسبوع</option>
+                            <option value="weekends">عطلة نهاية الأسبوع</option>
+                            <option value="flexible">حسب الحاجة (مرن)</option>
+                            <option value="fulltime">متفرّغ بالكامل</option>
+                        </select>
+                    </div>
+                    <div class="field" style="margin-bottom:28px;">
+                        <label>خبرات أو مهارات سابقة (اختياري)</label>
+                        <textarea rows="3" name="experience" placeholder="اذكر أي خبرات تطوعية أو مهارات تساعدنا في توجيهك للمكان المناسب"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;">إرسال طلب الانضمام</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div>
+                    <img src="../assets/images/logo_header.png" alt="مؤسسة دعم" class="f-logo">
+                    <p>مؤسسة تنموية مصرية غير ربحية ملتزمة بدفع عجلة التنمية الشاملة وتمكين المجتمعات المحلية.</p>
+                    <div class="f-social"><a href="#"><i class="fab fa-facebook-f"></i></a><a href="#"><i class="fab fa-instagram"></i></a><a href="#"><i class="fab fa-linkedin-in"></i></a><a href="#"><i class="fab fa-youtube"></i></a></div>
+                </div>
+                <div><h4>روابط سريعة</h4><ul><li><a href="about.html">من نحن</a></li><li><a href="programs.html">برامجنا</a></li><li><a href="projects.html">مشروعاتنا</a></li><li><a href="media.html">المركز الإعلامي</a></li></ul></div>
+                <div><h4>المؤسسة</h4><ul><li><a href="participate.html">انضم إلينا</a></li><li><a href="contact.html">تواصل معنا</a></li><li><a href="programs.html">مجالات العمل</a></li></ul></div>
+                <div><h4>تواصل معنا</h4><ul class="f-contact"><li><i class="fas fa-map-marker-alt"></i><span>بلبيس، محافظة الشرقية، مصر</span></li><li><i class="fas fa-phone"></i><span>+20 122 253 6153</span></li><li><i class="fas fa-file-contract"></i><span>مشهرة برقم 3924 لعام 2025</span></li></ul></div>
+            </div>
+        </div>
+        <div class="footer-bottom"><div class="container">حقوق النشر © <span data-year>2025</span> مؤسسة دعم للتنمية المستدامة. جميع الحقوق محفوظة.</div></div>
+    </footer>
+
+    <script src="assets/js/main.js"></script>
+</body>
+
+</html>
