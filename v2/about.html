@@ -62,12 +62,8 @@
                 <span class="eyebrow green">فريق العمل</span>
                 <h2>القائمون على المؤسسة</h2>
             </div>
-            <div class="grid-3" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:24px;">
-                <div class="info-card reveal"><div class="ic"><i class="fas fa-user"></i></div><h4>عبدالله مصطفى</h4></div>
-                <div class="info-card reveal"><div class="ic"><i class="fas fa-user"></i></div><h4>باسنت العربي</h4></div>
-                <div class="info-card reveal d1"><div class="ic"><i class="fas fa-user"></i></div><h4>مؤمن غانم</h4></div>
-                <div class="info-card reveal d1"><div class="ic"><i class="fas fa-user"></i></div><h4>نيهال محجوب</h4></div>
-                <div class="info-card reveal d2"><div class="ic"><i class="fas fa-user"></i></div><h4>احمد إسماعيل</h4></div>
+            <div class="grid-3" id="teamGrid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:24px;">
+                <p style="grid-column:1/-1;text-align:center;color:var(--muted);">جارٍ تحميل الفريق...</p>
             </div>
         </div>
     </section>
@@ -142,6 +138,23 @@
     </footer>
 
     <script src="assets/js/main.js"></script>
+    <script>
+        (function () {
+            var path = location.pathname, i = path.indexOf('/v2/');
+            var BASE = i >= 0 ? path.slice(0, i) : '';
+            var grid = document.getElementById('teamGrid');
+            if (!grid) return;
+            fetch(BASE + '/v2/data/team.json?t=' + Date.now()).then(function (r) { return r.json(); }).then(function (data) {
+                var members = (data && data.members) || [];
+                if (!members.length) { grid.innerHTML = ''; return; }
+                grid.innerHTML = members.map(function (m) {
+                    var photo = BASE + m.photo;
+                    var role = m.role_ar ? '<p style="color:var(--muted);font-size:0.9rem;margin-top:2px;">' + m.role_ar + '</p>' : '';
+                    return '<div class="info-card reveal in"><img src="' + photo + '" alt="' + (m.name_ar || '') + '" style="width:110px;height:110px;border-radius:50%;object-fit:cover;margin:0 auto 16px;box-shadow:var(--shadow-sm);"><h4>' + (m.name_ar || '') + '</h4>' + role + '</div>';
+                }).join('');
+            }).catch(function () { grid.innerHTML = ''; });
+        })();
+    </script>
 </body>
 
 </html>

@@ -1,0 +1,43 @@
+{
+  "posts": [
+    {
+      "id": "masar-launch",
+      "date": "2025",
+      "image": "/assets/images/audience_youth_training.png",
+      "tag_ar": "خبر",
+      "tag_en": "News",
+      "title_ar": "تدشين مبادرة «مسار»",
+      "title_en": "\"Masar\" Initiative Launched",
+      "excerpt_ar": "أطلقت المؤسسة مبادرة «مسار» للتدريب على المهارات الوظيفية مستهدفة 500 شاب وفتاة من أبناء بلبيس والمراكز المجاورة.",
+      "excerpt_en": "The foundation launched the \"Masar\" job-skills training initiative, targeting 500 young men and women from Belbeis and nearby districts.",
+      "body_ar": "<p>قمنا بتدشين مبادرة «مسار» للتدريب على المهارات الوظيفية، حيث استهدفت المبادرة 500 شاب وفتاة من الفئات العمرية 18 حتى 35 عاماً من أبناء مدينة بلبيس والمراكز المجاورة.</p><p>تهدف المبادرة إلى تأهيل الشباب لسوق العمل وبناء قدراتهم في المهارات الوظيفية المطلوبة، بما يسهم في تحسين فرصهم وتحقيق الاستقلال المالي.</p>",
+      "body_en": "<p>We launched the \"Masar\" initiative for job-skills training, targeting 500 young men and women aged 18 to 35 from Belbeis city and nearby districts.</p><p>The initiative aims to prepare youth for the labor market and build their capacities in the required job skills, helping improve their opportunities and achieve financial independence.</p>"
+    },
+    {
+      "id": "official-registration",
+      "date": "2025",
+      "image": "/assets/images/partnership_hands.png",
+      "tag_ar": "إعلان",
+      "tag_en": "Announcement",
+      "title_ar": "إشهار المؤسسة رسمياً",
+      "title_en": "Officially Registered",
+      "excerpt_ar": "تم إشهار مؤسسة دعم للتنمية المستدامة رسمياً برقم 3924 لعام 2025 لتبدأ رحلتها في خدمة المجتمع من بلبيس.",
+      "excerpt_en": "Da'am Foundation for Sustainable Development was officially registered No. 3924 of 2025, beginning its journey of community service from Belbeis.",
+      "body_ar": "<p>تم إشهار مؤسسة دعم للتنمية المستدامة رسمياً تحت رقم 3924 لعام 2025 طبقاً لأحكام القانون وتحت راية وزارة التضامن الاجتماعي.</p><p>وبهذا الإشهار تبدأ المؤسسة رحلتها في خدمة المجتمع من مدينة بلبيس بمحافظة الشرقية، كنواة لكيان شبابي يعمل على التنمية المحلية المستدامة.</p>",
+      "body_en": "<p>Da'am Foundation for Sustainable Development was officially registered under No. 3924 of 2025 in accordance with the law and under the Ministry of Social Solidarity.</p><p>With this registration, the foundation begins its journey of community service from Belbeis city in Sharkia governorate, as the nucleus of a youth entity working on sustainable local development.</p>"
+    },
+    {
+      "id": "community-activities",
+      "date": "2025",
+      "image": "/assets/images/audience_families.png",
+      "tag_ar": "نشاط",
+      "tag_en": "Activity",
+      "title_ar": "أنشطة مجتمعية متواصلة",
+      "title_en": "Ongoing Community Activities",
+      "excerpt_ar": "يواصل فريق المؤسسة تنفيذ أنشطة ميدانية لدعم الأسر والفئات الأكثر احتياجاً بالتعاون مع شركاء المجتمع المحلي.",
+      "excerpt_en": "The foundation's team continues field activities supporting families and those most in need, in cooperation with local community partners.",
+      "body_ar": "<p>يواصل فريق مؤسسة دعم تنفيذ أنشطة ميدانية متنوعة لدعم الأسر والفئات الأكثر احتياجاً، وذلك بالتعاون مع شركاء المجتمع المحلي.</p><p>وتشمل هذه الأنشطة برامج الحماية الاجتماعية ودعم المرأة والشباب والأطفال وذوي الإعاقة، بما يحقق أثراً مباشراً في حياة المستفيدين.</p>",
+      "body_en": "<p>Da'am Foundation's team continues to carry out various field activities to support families and the most vulnerable groups, in cooperation with local community partners.</p><p>These activities include social protection programs and support for women, youth, children, and people with disabilities, achieving a direct impact on the lives of beneficiaries.</p>"
+    }
+  ]
+}

@@ -44,29 +44,20 @@
         </div>
     </section>
 
+    <!-- News (dynamic) -->
     <section class="section">
         <div class="container">
             <div class="section-head reveal">
                 <span class="eyebrow">Latest News</span>
-                <h2>Foundation News & Events</h2>
+                <h2>Foundation News &amp; Events</h2>
             </div>
-            <div class="grid-3">
-                <div class="media-card reveal">
-                    <div class="thumb"><img src="../../assets/images/audience_youth_training.png" alt="Masar launch"><span class="tag">News</span></div>
-                    <div class="body"><div class="date"><i class="far fa-calendar"></i> 2025</div><h3>"Masar" Initiative Launched</h3><p>The foundation launched the "Masar" job-skills training initiative, targeting 500 young men and women from Belbeis and nearby districts.</p><a href="projects.html" class="link-arrow">Details <i class="fas fa-arrow-right"></i></a></div>
-                </div>
-                <div class="media-card reveal d1">
-                    <div class="thumb"><img src="../../assets/images/partnership_hands.png" alt="Registration"><span class="tag">Announcement</span></div>
-                    <div class="body"><div class="date"><i class="far fa-calendar"></i> 2025</div><h3>Officially Registered</h3><p>Da'am Foundation for Sustainable Development was officially registered No. 3924 of 2025, beginning its journey of community service from Belbeis.</p><a href="about.html" class="link-arrow">About Us <i class="fas fa-arrow-right"></i></a></div>
-                </div>
-                <div class="media-card reveal d2">
-                    <div class="thumb"><img src="../../assets/images/audience_families.png" alt="Community activities"><span class="tag">Activity</span></div>
-                    <div class="body"><div class="date"><i class="far fa-calendar"></i> 2025</div><h3>Ongoing Community Activities</h3><p>The foundation's team continues field activities supporting families and those most in need, in cooperation with local community partners.</p><a href="contact.html" class="link-arrow">Contact Us <i class="fas fa-arrow-right"></i></a></div>
-                </div>
+            <div class="grid-3" id="newsGrid">
+                <p style="grid-column:1/-1;text-align:center;color:var(--muted);">Loading news...</p>
             </div>
         </div>
     </section>
 
+    <!-- Gallery -->
     <section class="section bg-soft">
         <div class="container">
             <div class="section-head reveal">
@@ -84,10 +75,11 @@
         </div>
     </section>
 
+    <!-- CTA -->
     <section class="section">
         <div class="container">
             <div class="cta-band reveal">
-                <h2>Press inquiries & media partnerships</h2>
+                <h2>Press inquiries &amp; media partnerships</h2>
                 <p>We welcome journalists and media organizations seeking information or coverage of the foundation's activities.</p>
                 <a href="contact.html" class="btn btn-accent btn-lg">Contact Us</a>
             </div>
@@ -97,16 +89,43 @@
     <footer class="site-footer">
         <div class="container">
             <div class="footer-grid">
-                <div><img src="../../assets/images/logo_header.png" alt="Da'am" class="f-logo"><p>Egyptian non-profit development foundation committed to driving comprehensive development.</p><div class="f-social"><a href="#"><i class="fab fa-facebook-f"></i></a><a href="#"><i class="fab fa-instagram"></i></a><a href="#"><i class="fab fa-linkedin-in"></i></a><a href="#"><i class="fab fa-youtube"></i></a></div></div>
-                <div><h4>Quick Links</h4><ul><li><a href="about.html">About</a></li><li><a href="programs.html">Programs</a></li><li><a href="projects.html">Projects</a></li><li><a href="media.html">Media Center</a></li></ul></div>
-                <div><h4>Foundation</h4><ul><li><a href="participate.html">Join Us</a></li><li><a href="contact.html">Contact</a></li><li><a href="programs.html">Our Work</a></li></ul></div>
-                <div><h4>Contact</h4><ul class="f-contact"><li><i class="fas fa-map-marker-alt"></i><span>Belbeis, Sharkia, Egypt</span></li><li><i class="fas fa-phone"></i><span>+201222536153</span></li><li><i class="fas fa-file-contract"></i><span>Reg. No. 3924 of 2025</span></li></ul></div>
+                <div>
+                    <img src="../../assets/images/logo_header.png" alt="Da'am" class="f-logo">
+                    <p>Egyptian non-profit development foundation committed to driving comprehensive development.</p>
+                    <div class="f-social"><a href="#"><i class="fab fa-facebook-f"></i></a><a href="#"><i class="fab fa-instagram"></i></a><a href="#"><i class="fab fa-linkedin-in"></i></a><a href="#"><i class="fab fa-youtube"></i></a></div>
+                </div>
+                <div><h4>Quick Links</h4><ul><li><a href="about.html">About Us</a></li><li><a href="programs.html">Programs</a></li><li><a href="projects.html">Our Projects</a></li><li><a href="media.html">Media Center</a></li><li><a href="participate.html">Join Us</a></li><li><a href="contact.html">Contact Us</a></li></ul></div>
+                <div><h4>Newsletter</h4><p style="margin-bottom:12px;">Subscribe to our newsletter to stay updated.</p><form class="f-news" onsubmit="return false;"><input type="email" placeholder="Your Email"><button type="submit" class="btn btn-accent" style="padding:12px 20px;">Subscribe</button></form></div>
+                <div><h4>Contact Info</h4><ul class="f-contact"><li><i class="fas fa-map-marker-alt"></i><span>Belbeis, Sharkia, Egypt</span></li><li><i class="fas fa-file-contract"></i><span>Reg. No. 3924 of 2025</span></li></ul></div>
             </div>
         </div>
-        <div class="footer-bottom"><div class="container">Copyright © <span data-year>2025</span> Da'am Foundation for Sustainable Development. All rights reserved.</div></div>
+        <div class="footer-bottom"><div class="container">Copyright © <span data-year>2025</span> Da'am Foundation for Sustainable Development.</div></div>
     </footer>
 
     <script src="../assets/js/main.js"></script>
+    <script>
+        (function () {
+            var path = location.pathname, i = path.indexOf('/v2/');
+            var BASE = i >= 0 ? path.slice(0, i) : '';
+            var grid = document.getElementById('newsGrid');
+            fetch(BASE + '/v2/data/news.json?t=' + Date.now()).then(function (r) { return r.json(); }).then(function (data) {
+                var posts = (data && data.posts) || [];
+                if (!posts.length) { grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--muted);">No news yet.</p>'; return; }
+                grid.innerHTML = posts.map(function (p, idx) {
+                    var img = BASE + p.image;
+                    var d = ['', ' d1', ' d2'][idx % 3];
+                    return '<a class="media-card reveal' + d + '" href="post.html?id=' + encodeURIComponent(p.id) + '" style="color:inherit;">'
+                        + '<div class="thumb"><img src="' + img + '" alt="' + (p.title_en || '') + '"><span class="tag">' + (p.tag_en || 'News') + '</span></div>'
+                        + '<div class="body"><div class="date"><i class="far fa-calendar"></i> ' + (p.date || '') + '</div>'
+                        + '<h3>' + (p.title_en || '') + '</h3><p>' + (p.excerpt_en || '') + '</p>'
+                        + '<span class="link-arrow">Details <i class="fas fa-arrow-right"></i></span></div></a>';
+                }).join('');
+                grid.querySelectorAll('.reveal').forEach(function (el) { el.classList.add('in'); });
+            }).catch(function () {
+                grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--muted);">Failed to load news.</p>';
+            });
+        })();
+    </script>
 </body>
 
 </html>
