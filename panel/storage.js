@@ -1,9 +1,11 @@
 /* ============================================================
    Da'am CMS — Storage layer (window.CMS)
+   The panel is fully standalone: it lives on its own link and
+   can even be hosted on a different domain from the website.
+
    Two interchangeable backends behind one API:
-     • github : saves via GitHub Contents API  (current hosting)
-     • php    : saves via api.php on the same server (future hosting)
-   The editor UI never needs to know which one is active.
+     • github : saves via GitHub Contents API   (current hosting)
+     • php    : saves via api.php on the site's server (future)
    ============================================================ */
 (function () {
     'use strict';
@@ -11,23 +13,44 @@
     var CONFIG = {
         owner: 'Elewa11', repo: 'daam-website', branch: 'main',
         password: 'admin123',
-        _tk: 'VXNTWnoxazkzNFUzZEdPZWlRcFdqdUU5Wm56ZkFIVlFVZlVWX3BoZw=='
+        _tk: 'VXNTWnoxazkzNFUzZEdPZWlRcFdqdUU5Wm56ZkFIVlFVZlVWX3BoZw==',
+
+        // Absolute URL of the live site root (where /assets and /v2 live).
+        // Leave '' for auto-detection; can also be overridden via
+        // localStorage.setItem('cms_site_url', 'https://example.com')
+        SITE_URL: '',
+
+        // URL of api.php when the panel is hosted on a DIFFERENT domain
+        // than the website (otherwise auto: 'api.php' next to the panel).
+        // Override via localStorage.setItem('cms_api_url', '...')
+        API_URL: ''
     };
 
-    // Site base prefix (e.g. '/daam-website' on GitHub Pages, '' on a normal server)
-    var p = location.pathname, vi = p.indexOf('/v2/');
-    var BASE = vi >= 0 ? p.slice(0, vi) : '';
+    /* ---------- mode + site URL detection ---------- */
+    function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
 
-    // Backend mode: GitHub Pages → github, anything else (real server) → php.
-    // Can be forced with localStorage.setItem('cms_mode','php'|'github').
-    var forced = null;
-    try { forced = localStorage.getItem('cms_mode'); } catch (e) { }
-    var MODE = forced || (location.hostname.indexOf('github.io') !== -1 ? 'github' : 'php');
+    var MODE = lsGet('cms_mode') || (location.hostname.indexOf('github.io') !== -1 ? 'github' : 'php');
+
+    function detectSiteURL() {
+        var forced = lsGet('cms_site_url') || CONFIG.SITE_URL;
+        if (forced) return forced.replace(/\/+$/, '');
+        if (location.hostname.indexOf('github.io') !== -1) {
+            // https://<user>.github.io/<repo>/panel/ → site root = origin + /<repo>
+            return location.origin + '/' + CONFIG.repo;
+        }
+        // panel served from <siteroot>/panel/… → site root is one level up
+        var p = location.pathname;
+        var i = p.indexOf('/panel/');
+        if (i === -1) i = p.lastIndexOf('/');
+        return (location.origin + p.slice(0, i)).replace(/\/+$/, '');
+    }
+    var SITE_URL = detectSiteURL();
 
     var API = 'https://api.github.com/repos/' + CONFIG.owner + '/' + CONFIG.repo;
-    var PHP = 'api.php'; // lives next to the admin pages
+    var PHP_URL = lsGet('cms_api_url') || CONFIG.API_URL || 'api.php';
 
-    var token = null;
+    var token = null;   // github
+    var pwdMem = null;  // php (sent with every request)
 
     /* ---------- shared utils ---------- */
     function b64encode(str) {
@@ -67,7 +90,6 @@
             });
         },
         saveText: function (path, text, message) {
-            // fresh GET for the sha, then PUT
             return fetch(API + '/contents/' + path + '?ref=' + CONFIG.branch + '&t=' + Date.now(), {
                 headers: { 'Authorization': 'token ' + token }
             }).then(function (r) { return r.ok ? r.json() : null; }).then(function (cur) {
@@ -101,11 +123,11 @@
         publishDelayNote: 'سيظهر التعديل على الموقع خلال دقيقة تقريباً.'
     };
 
-    /* ---------- PHP backend (future server) ---------- */
+    /* ---------- PHP backend (the site's own server) ---------- */
     function phpCall(payload) {
-        return fetch(PHP, {
+        payload.password = pwdMem;
+        return fetch(PHP_URL, {
             method: 'POST',
-            credentials: 'same-origin',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         }).then(function (r) { return r.json(); }).then(function (j) {
@@ -115,8 +137,9 @@
     }
     var PH = {
         login: function (pwd) {
-            return phpCall({ action: 'login', password: pwd }).then(function () { return true; })
-                .catch(function () { return false; });
+            pwdMem = pwd;
+            return phpCall({ action: 'login' }).then(function () { return true; })
+                .catch(function () { pwdMem = null; return false; });
         },
         loadText: function (path) {
             return phpCall({ action: 'get', path: path }).then(function (j) { return j.content; })
@@ -137,7 +160,7 @@
 
     window.CMS = {
         mode: MODE,
-        base: BASE,
+        siteURL: SITE_URL,                      // absolute, no trailing slash
         login: function (pwd) { return impl.login(pwd); },
         loadText: function (path) { return impl.loadText(path); },
         saveText: function (path, text, message) { return impl.saveText(path, text, message); },

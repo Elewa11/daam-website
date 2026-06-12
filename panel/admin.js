@@ -51,7 +51,7 @@
     }
     function imgURL(rootRel) {
         // preview URL for a stored root-relative path like /assets/.. or /v2/uploads/..
-        return CMS.base + rootRel;
+        return CMS.siteURL + rootRel;
     }
 
     /* ---------- auth ---------- */
@@ -328,6 +328,12 @@
         document.querySelectorAll('.rt-wrap').forEach(buildToolbar);
 
         PageEditor.init({ toast: toast, loading: loading });
+
+        // point logos and the "view site" link at the live site, wherever the panel is hosted
+        var vs = $('viewSite'); if (vs) vs.href = CMS.siteURL + '/v2/index.html';
+        document.querySelectorAll('img[data-logo]').forEach(function (im) {
+            im.src = CMS.siteURL + '/assets/images/logo_header.png';
+        });
 
         // auto-login within the same browser session
         var saved = null;

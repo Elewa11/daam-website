@@ -1,22 +1,27 @@
 <?php
 /* ============================================================
-   Da'am CMS — Server backend (used when the site is hosted on
-   a normal web server instead of GitHub Pages).
+   Da'am CMS — Server backend
+   يُستخدم عندما يكون الموقع على سيرفر عادي (بدل GitHub Pages).
 
    ⚠️ قبل التشغيل على السيرفر الجديد:
    1) غيّر كلمة المرور في السطر التالي.
-   2) تأكد أن مجلد الموقع قابل للكتابة (الصفحات + v2/uploads).
-   لا حاجة لأي إعداد آخر — لوحة التحكم تكتشف السيرفر تلقائياً.
+   2) لو لوحة التحكم ستُستضاف على دومين مختلف عن الموقع،
+      ضع رابط الدومين في $PANEL_ORIGIN (وإلا اتركه '*').
    ============================================================ */
 
-$PASSWORD = 'admin123';   // ← غيّر كلمة المرور هنا
+$PASSWORD     = 'admin123';   // ← غيّر كلمة المرور هنا
+$PANEL_ORIGIN = '*';          // أو مثال: 'https://admin.example.com'
 
 /* ------------------------------------------------------------ */
-session_start();
+header('Access-Control-Allow-Origin: ' . $PANEL_ORIGIN);
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
+
 header('Content-Type: application/json; charset=utf-8');
 
-// Site root = two levels above this file (…/v2/admin/api.php → site root)
-$ROOT = realpath(__DIR__ . '/../..');
+// Site root = one level above this file (…/panel/api.php → site root)
+$ROOT = realpath(__DIR__ . '/..');
 
 function out($data) { echo json_encode($data, JSON_UNESCAPED_UNICODE); exit; }
 function fail($msg, $code = 400) { http_response_code($code); out(['ok' => false, 'error' => $msg]); }
@@ -25,24 +30,20 @@ $in = json_decode(file_get_contents('php://input'), true);
 if (!is_array($in)) fail('bad request');
 $action = isset($in['action']) ? $in['action'] : '';
 
-/* ---------- login ---------- */
-if ($action === 'login') {
-    $pwd = isset($in['password']) ? $in['password'] : '';
-    if (!hash_equals($PASSWORD, $pwd)) fail('wrong password', 401);
-    $_SESSION['daam_auth'] = true;
-    out(['ok' => true]);
-}
+/* ---------- auth: password sent with every request ---------- */
+$pwd = isset($in['password']) ? $in['password'] : '';
+if (!is_string($pwd) || !hash_equals($PASSWORD, $pwd)) fail('not authenticated', 401);
 
-if (empty($_SESSION['daam_auth'])) fail('not authenticated', 401);
+if ($action === 'login') out(['ok' => true]);
 
 /* ---------- path safety ----------
    Only files inside the site root, only .html / .json,
-   and never inside the admin folder itself. */
+   and never the panel or the legacy admin themselves. */
 function resolve_path($ROOT, $rel) {
     $rel = str_replace('\\', '/', $rel);
     if ($rel === '' || strpos($rel, '..') !== false || $rel[0] === '/') return null;
     if (!preg_match('/\.(html|json)$/i', $rel)) return null;
-    if (stripos($rel, 'v2/admin/') === 0 || stripos($rel, 'admin/') === 0) return null; // never touch the admin itself
+    if (stripos($rel, 'panel/') === 0 || stripos($rel, 'admin/') === 0) return null;
     $full = $ROOT . '/' . $rel;
     $dir  = realpath(dirname($full));
     if ($dir === false || strpos($dir, $ROOT) !== 0) return null;

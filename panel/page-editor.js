@@ -49,7 +49,7 @@
             // 1) disable page scripts so the editor sees the original markup
             raw = raw.replace(/<script\b/gi, '<script type="text/cms-off" data-cms-inert');
             // 2) make relative assets resolve from the page's real directory
-            var baseHref = location.origin + CMS.base + '/' + (state.dir ? state.dir + '/' : '');
+            var baseHref = CMS.siteURL + '/' + (state.dir ? state.dir + '/' : '');
             raw = raw.replace(/<head([^>]*)>/i, '<head$1><base href="' + baseHref + '" data-cms-base>');
             frame().srcdoc = raw;
             frame().onload = function () { wireFrame(); ui.loading(false); };
