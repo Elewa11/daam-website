@@ -66,22 +66,23 @@
         <div class="container">
             <div class="section-header-modern mb-5">
                 <span class="section-badge">كن جزءاً من الفريق</span>
-                <h2 class="section-title-modern">استمارة التطوع</h2>
-                <p style="color:#666; max-width:600px; margin:0 auto;">سجل بياناتك وانضم إلينا لنصنع الفرق معاً.</p>
+                <h2 class="section-title-modern">استمارة الانضمام إلينا</h2>
+                <p style="color:#666; max-width:600px; margin:0 auto;">سجّل بياناتك وانضم إلى أسرة مؤسسة دعم لنصنع الفرق معاً.</p>
             </div>
 
             <div class="form-wrapper"
                 style="max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.05);">
-                <form action="#">
+                <form action="#" method="POST">
+                    <!-- البيانات الشخصية -->
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
                         <div class="form-group">
-                            <label style="display:block; margin-bottom:8px; font-weight:700;">الاسم الكامل</label>
-                            <input type="text" class="form-control"
+                            <label style="display:block; margin-bottom:8px; font-weight:700;">الاسم الكامل <span style="color:#e74c3c;">*</span></label>
+                            <input type="text" name="full_name" required placeholder="الاسم رباعي"
                                 style="width:100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
                         </div>
                         <div class="form-group">
-                            <label style="display:block; margin-bottom:8px; font-weight:700;">رقم الهاتف</label>
-                            <input type="tel" class="form-control"
+                            <label style="display:block; margin-bottom:8px; font-weight:700;">رقم الهاتف <span style="color:#e74c3c;">*</span></label>
+                            <input type="tel" name="phone" required placeholder="01xxxxxxxxx"
                                 style="width:100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
                         </div>
                     </div>
@@ -89,50 +90,97 @@
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
                         <div class="form-group">
                             <label style="display:block; margin-bottom:8px; font-weight:700;">البريد الإلكتروني</label>
-                            <input type="email" class="form-control"
+                            <input type="email" name="email" placeholder="example@email.com"
                                 style="width:100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
                         </div>
                         <div class="form-group">
-                            <label style="display:block; margin-bottom:8px; font-weight:700;">الوظيفة / التخصص</label>
-                            <input type="text" class="form-control"
+                            <label style="display:block; margin-bottom:8px; font-weight:700;">السن</label>
+                            <input type="number" name="age" min="16" max="80" placeholder="مثال: 22"
                                 style="width:100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
                         </div>
                     </div>
 
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                        <div class="form-group">
+                            <label style="display:block; margin-bottom:8px; font-weight:700;">المؤهل الدراسي / التخصص</label>
+                            <input type="text" name="qualification" placeholder="مثال: بكالوريوس تجارة"
+                                style="width:100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+                        </div>
+                        <div class="form-group">
+                            <label style="display:block; margin-bottom:8px; font-weight:700;">المحافظة / مكان الإقامة</label>
+                            <input type="text" name="city" placeholder="مثال: بلبيس، الشرقية"
+                                style="width:100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+                        </div>
+                    </div>
+
+                    <!-- نوع المشاركة -->
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label style="display:block; margin-bottom:8px; font-weight:700;">كيف ترغب في الانضمام؟ <span style="color:#e74c3c;">*</span></label>
+                        <select name="join_type" required
+                            style="width:100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; background:#fff;">
+                            <option value="" disabled selected>اختر نوع المشاركة</option>
+                            <option value="volunteer">متطوع</option>
+                            <option value="trainee">متدرب</option>
+                            <option value="partner">شريك / جهة داعمة</option>
+                            <option value="expert">خبير / استشاري</option>
+                        </select>
+                    </div>
+
+                    <!-- مجالات الاهتمام -->
                     <div class="form-group" style="margin-bottom: 25px;">
                         <label style="display:block; margin-bottom:12px; font-weight:700;">مجالات الاهتمام (يمكن اختيار
                             أكثر من مجال)</label>
                         <div
                             style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;">
                             <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                                <input type="checkbox" style="width: 18px; height: 18px;"> تنظيم الفعاليات
+                                <input type="checkbox" name="interests[]" value="تنظيم الفعاليات" style="width: 18px; height: 18px;"> تنظيم الفعاليات
                             </label>
                             <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                                <input type="checkbox" style="width: 18px; height: 18px;"> التدريس والتدريب
+                                <input type="checkbox" name="interests[]" value="التدريس والتدريب" style="width: 18px; height: 18px;"> التدريس والتدريب
                             </label>
                             <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                                <input type="checkbox" style="width: 18px; height: 18px;"> التصوير والميديا
+                                <input type="checkbox" name="interests[]" value="التصوير والميديا" style="width: 18px; height: 18px;"> التصوير والميديا
                             </label>
                             <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                                <input type="checkbox" style="width: 18px; height: 18px;"> الأبحاث الميدانية
+                                <input type="checkbox" name="interests[]" value="الأبحاث الميدانية" style="width: 18px; height: 18px;"> الأبحاث الميدانية
                             </label>
                             <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                                <input type="checkbox" style="width: 18px; height: 18px;"> الخدمات الطبية
+                                <input type="checkbox" name="interests[]" value="الخدمات الطبية" style="width: 18px; height: 18px;"> الخدمات الطبية
                             </label>
                             <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                                <input type="checkbox" style="width: 18px; height: 18px;"> التوزيع واللوجستيات
+                                <input type="checkbox" name="interests[]" value="التوزيع واللوجستيات" style="width: 18px; height: 18px;"> التوزيع واللوجستيات
+                            </label>
+                            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                                <input type="checkbox" name="interests[]" value="التمكين الاقتصادي" style="width: 18px; height: 18px;"> التمكين الاقتصادي
+                            </label>
+                            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                                <input type="checkbox" name="interests[]" value="المبادرات البيئية" style="width: 18px; height: 18px;"> المبادرات البيئية
                             </label>
                         </div>
                     </div>
 
+                    <!-- التفرّغ -->
                     <div class="form-group" style="margin-bottom: 25px;">
-                        <label style="display:block; margin-bottom:8px; font-weight:700;">خبرات سابقة في التطوع؟</label>
-                        <textarea rows="3"
+                        <label style="display:block; margin-bottom:8px; font-weight:700;">الوقت المتاح للتطوع</label>
+                        <select name="availability"
+                            style="width:100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; background:#fff;">
+                            <option value="" disabled selected>اختر مدى تفرّغك</option>
+                            <option value="weekdays">أيام الأسبوع</option>
+                            <option value="weekends">عطلة نهاية الأسبوع</option>
+                            <option value="flexible">حسب الحاجة (مرن)</option>
+                            <option value="fulltime">متفرّغ بالكامل</option>
+                        </select>
+                    </div>
+
+                    <!-- الخبرات -->
+                    <div class="form-group" style="margin-bottom: 25px;">
+                        <label style="display:block; margin-bottom:8px; font-weight:700;">خبرات أو مهارات سابقة (اختياري)</label>
+                        <textarea rows="3" name="experience" placeholder="اذكر أي خبرات تطوعية أو مهارات تساعدنا في توجيهك للمكان المناسب"
                             style="width:100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;"></textarea>
                     </div>
 
                     <button type="submit" class="btn btn-primary"
-                        style="width: 100%; padding: 15px; font-size: 1.1rem;">إرسال طلب التطوع</button>
+                        style="width: 100%; padding: 15px; font-size: 1.1rem;">إرسال طلب الانضمام</button>
                 </form>
             </div>
         </div>

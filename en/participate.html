@@ -66,23 +66,24 @@
         <div class="container">
             <div class="section-header-modern mb-5">
                 <span class="section-badge">Join The Team</span>
-                <h2 class="section-title-modern">Volunteer Application</h2>
-                <p style="color:#666; max-width:600px; margin:0 auto;">Register your details and join us to make a
-                    difference together.</p>
+                <h2 class="section-title-modern">Join Us Application</h2>
+                <p style="color:#666; max-width:600px; margin:0 auto;">Register your details and join the Da'am family
+                    to make a difference together.</p>
             </div>
 
             <div class="form-wrapper"
                 style="max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.05);">
-                <form action="#">
+                <form action="#" method="POST">
+                    <!-- Personal Info -->
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
                         <div class="form-group">
-                            <label style="display:block; margin-bottom:8px; font-weight:700;">Full Name</label>
-                            <input type="text" class="form-control"
+                            <label style="display:block; margin-bottom:8px; font-weight:700;">Full Name <span style="color:#e74c3c;">*</span></label>
+                            <input type="text" name="full_name" required placeholder="Your full name"
                                 style="width:100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
                         </div>
                         <div class="form-group">
-                            <label style="display:block; margin-bottom:8px; font-weight:700;">Phone Number</label>
-                            <input type="tel" class="form-control"
+                            <label style="display:block; margin-bottom:8px; font-weight:700;">Phone Number <span style="color:#e74c3c;">*</span></label>
+                            <input type="tel" name="phone" required placeholder="01xxxxxxxxx"
                                 style="width:100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
                         </div>
                     </div>
@@ -90,52 +91,97 @@
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
                         <div class="form-group">
                             <label style="display:block; margin-bottom:8px; font-weight:700;">Email Address</label>
-                            <input type="email" class="form-control"
+                            <input type="email" name="email" placeholder="example@email.com"
                                 style="width:100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
                         </div>
                         <div class="form-group">
-                            <label style="display:block; margin-bottom:8px; font-weight:700;">Job /
-                                Specialization</label>
-                            <input type="text" class="form-control"
+                            <label style="display:block; margin-bottom:8px; font-weight:700;">Age</label>
+                            <input type="number" name="age" min="16" max="80" placeholder="e.g. 22"
                                 style="width:100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
                         </div>
                     </div>
 
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                        <div class="form-group">
+                            <label style="display:block; margin-bottom:8px; font-weight:700;">Qualification / Specialization</label>
+                            <input type="text" name="qualification" placeholder="e.g. B.Sc. Commerce"
+                                style="width:100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+                        </div>
+                        <div class="form-group">
+                            <label style="display:block; margin-bottom:8px; font-weight:700;">City / Residence</label>
+                            <input type="text" name="city" placeholder="e.g. Belbeis, Sharkia"
+                                style="width:100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+                        </div>
+                    </div>
+
+                    <!-- Join Type -->
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label style="display:block; margin-bottom:8px; font-weight:700;">How would you like to join? <span style="color:#e74c3c;">*</span></label>
+                        <select name="join_type" required
+                            style="width:100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; background:#fff;">
+                            <option value="" disabled selected>Select participation type</option>
+                            <option value="volunteer">Volunteer</option>
+                            <option value="trainee">Trainee</option>
+                            <option value="partner">Partner / Supporter</option>
+                            <option value="expert">Expert / Consultant</option>
+                        </select>
+                    </div>
+
+                    <!-- Areas of Interest -->
                     <div class="form-group" style="margin-bottom: 25px;">
                         <label style="display:block; margin-bottom:12px; font-weight:700;">Areas of Interest (Select
                             multiple)</label>
                         <div
                             style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;">
                             <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                                <input type="checkbox" style="width: 18px; height: 18px;"> Event Organization
+                                <input type="checkbox" name="interests[]" value="Event Organization" style="width: 18px; height: 18px;"> Event Organization
                             </label>
                             <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                                <input type="checkbox" style="width: 18px; height: 18px;"> Teaching & Training
+                                <input type="checkbox" name="interests[]" value="Teaching & Training" style="width: 18px; height: 18px;"> Teaching & Training
                             </label>
                             <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                                <input type="checkbox" style="width: 18px; height: 18px;"> Photography & Media
+                                <input type="checkbox" name="interests[]" value="Photography & Media" style="width: 18px; height: 18px;"> Photography & Media
                             </label>
                             <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                                <input type="checkbox" style="width: 18px; height: 18px;"> Field Research
+                                <input type="checkbox" name="interests[]" value="Field Research" style="width: 18px; height: 18px;"> Field Research
                             </label>
                             <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                                <input type="checkbox" style="width: 18px; height: 18px;"> Medical Services
+                                <input type="checkbox" name="interests[]" value="Medical Services" style="width: 18px; height: 18px;"> Medical Services
                             </label>
                             <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                                <input type="checkbox" style="width: 18px; height: 18px;"> Logistics & Distribution
+                                <input type="checkbox" name="interests[]" value="Logistics & Distribution" style="width: 18px; height: 18px;"> Logistics & Distribution
+                            </label>
+                            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                                <input type="checkbox" name="interests[]" value="Economic Empowerment" style="width: 18px; height: 18px;"> Economic Empowerment
+                            </label>
+                            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                                <input type="checkbox" name="interests[]" value="Environmental Initiatives" style="width: 18px; height: 18px;"> Environmental Initiatives
                             </label>
                         </div>
                     </div>
 
+                    <!-- Availability -->
                     <div class="form-group" style="margin-bottom: 25px;">
-                        <label style="display:block; margin-bottom:8px; font-weight:700;">Previous Volunteer
-                            Experience?</label>
-                        <textarea rows="3"
+                        <label style="display:block; margin-bottom:8px; font-weight:700;">Availability</label>
+                        <select name="availability"
+                            style="width:100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; background:#fff;">
+                            <option value="" disabled selected>Select your availability</option>
+                            <option value="weekdays">Weekdays</option>
+                            <option value="weekends">Weekends</option>
+                            <option value="flexible">As needed (Flexible)</option>
+                            <option value="fulltime">Full-time</option>
+                        </select>
+                    </div>
+
+                    <!-- Experience -->
+                    <div class="form-group" style="margin-bottom: 25px;">
+                        <label style="display:block; margin-bottom:8px; font-weight:700;">Previous Experience or Skills (Optional)</label>
+                        <textarea rows="3" name="experience" placeholder="Mention any volunteering experience or skills that help us guide you to the right place"
                             style="width:100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;"></textarea>
                     </div>
 
                     <button type="submit" class="btn btn-primary"
-                        style="width: 100%; padding: 15px; font-size: 1.1rem;">Submit Application</button>
+                        style="width: 100%; padding: 15px; font-size: 1.1rem;">Submit Join Request</button>
                 </form>
             </div>
         </div>
