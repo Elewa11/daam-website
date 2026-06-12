@@ -19,7 +19,7 @@
         <div class="login-card">
             <img src="../../assets/images/logo_header.png" alt="مؤسسة دعم" class="logo" style="filter:brightness(0) invert(0)">
             <h1>لوحة تحكم الموقع</h1>
-            <p class="sub">إدارة الأخبار وفريق العمل</p>
+            <p class="sub">تحرير صفحات الموقع، الأخبار، وفريق العمل</p>
             <div class="field-group">
                 <label for="pwd">كلمة المرور</label>
                 <input type="password" id="pwd" placeholder="أدخل كلمة المرور" autocomplete="current-password">
@@ -44,12 +44,25 @@
 
         <div class="wrap">
             <div class="tabs">
-                <button class="tab active" data-tab="news">📰 الأخبار</button>
+                <button class="tab active" data-tab="pages">📄 صفحات الموقع</button>
+                <button class="tab" data-tab="news">📰 الأخبار</button>
                 <button class="tab" data-tab="team">👥 فريق العمل</button>
             </div>
 
+            <!-- PAGES VIEW -->
+            <div id="view-pages">
+                <div class="view-head">
+                    <h2>تحرير صفحات الموقع</h2>
+                    <span class="muted">اختر صفحة ثم اضغط على أي نص أو صورة داخلها لتعديلها</span>
+                </div>
+                <h3 class="pages-group">الصفحات العربية</h3>
+                <div class="pages-grid" id="pagesAr"></div>
+                <h3 class="pages-group">الصفحات الإنجليزية</h3>
+                <div class="pages-grid" id="pagesEn"></div>
+            </div>
+
             <!-- NEWS VIEW -->
-            <div id="view-news">
+            <div id="view-news" class="hidden">
                 <div class="view-head">
                     <h2>الأخبار والبوستات</h2>
                     <button class="btn accent" id="newPostBtn"><i class="fas fa-plus"></i> خبر جديد</button>
@@ -69,6 +82,21 @@
         </div>
     </div>
 
+    <!-- VISUAL PAGE EDITOR (full screen) -->
+    <div id="pageEditor" class="ped hidden">
+        <div class="ped-top">
+            <button class="btn ghost sm" id="pedBack"><i class="fas fa-arrow-right"></i> رجوع للوحة</button>
+            <div class="ped-info">
+                <b id="pedTitle">…</b>
+                <span class="ped-hint">اضغط على أي نص لتعديله — اضغط على أي صورة لاستبدالها</span>
+            </div>
+            <span class="ped-count" id="pedCount">لا تعديلات</span>
+            <button class="btn accent" id="pedSave"><i class="fas fa-cloud-arrow-up"></i> حفظ ونشر</button>
+        </div>
+        <div class="ped-bar" id="pedToolbar"></div>
+        <iframe id="pedFrame" title="معاينة الصفحة"></iframe>
+    </div>
+
     <!-- POST EDITOR MODAL -->
     <div class="modal" id="postModal">
         <div class="modal-card">
@@ -77,7 +105,6 @@
                 <button class="x" id="closeModal">&times;</button>
             </div>
             <div class="modal-body">
-                <!-- Cover -->
                 <div class="field-group">
                     <label>صورة الخبر الرئيسية</label>
                     <div class="cover-pick" id="coverPick">
@@ -121,6 +148,8 @@
     <div class="toast" id="toast"></div>
     <div class="loading" id="loading"><div class="spinner"></div><p id="loadingText" class="muted">جارٍ الحفظ...</p></div>
 
+    <script src="storage.js"></script>
+    <script src="page-editor.js"></script>
     <script src="admin.js"></script>
 </body>
 

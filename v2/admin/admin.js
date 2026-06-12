@@ -1,124 +1,120 @@
 /* ============================================================
-   Da'am Foundation v2 — Admin (News + Team manager)
-   Saves to GitHub via the Contents API. Login = password only;
-   the access token is embedded (same as the legacy admin).
+   Da'am Foundation v2 — Admin app
+   Tabs: site pages (visual editor) + news + team.
+   All persistence goes through window.CMS (storage.js), which
+   targets GitHub now and api.php after moving to a new server.
    ============================================================ */
 (function () {
     'use strict';
 
-    var CONFIG = {
-        owner: 'Elewa11', repo: 'daam-website', branch: 'main',
-        password: 'admin123',
-        _tk: 'VXNTWnoxazkzNFUzZEdPZWlRcFdqdUU5Wm56ZkFIVlFVZlVWX3BoZw=='
-    };
-    var API = 'https://api.github.com/repos/' + CONFIG.owner + '/' + CONFIG.repo;
+    var PASSWORD_HINT_KEY = 'daam_v2_admin';
 
-    // Base path of the deployed site (e.g. /daam-website)
-    var p = location.pathname, vi = p.indexOf('/v2/');
-    var BASE = vi >= 0 ? p.slice(0, vi) : '';
+    // Editable site pages shown in the "صفحات الموقع" tab
+    var PAGES_AR = [
+        { file: 'v2/index.html', label: 'الرئيسية', icon: 'fa-house' },
+        { file: 'v2/about.html', label: 'من نحن', icon: 'fa-circle-info' },
+        { file: 'v2/programs.html', label: 'برامجنا', icon: 'fa-layer-group' },
+        { file: 'v2/projects.html', label: 'مشروعاتنا', icon: 'fa-diagram-project' },
+        { file: 'v2/media.html', label: 'المركز الإعلامي', icon: 'fa-newspaper' },
+        { file: 'v2/participate.html', label: 'انضم إلينا', icon: 'fa-handshake-angle' },
+        { file: 'v2/contact.html', label: 'تواصل معنا', icon: 'fa-envelope' },
+        { file: 'v2/post.html', label: 'قالب صفحة الخبر', icon: 'fa-file-lines' }
+    ];
+    var PAGES_EN = [
+        { file: 'v2/en/index.html', label: 'Home', icon: 'fa-house' },
+        { file: 'v2/en/about.html', label: 'About', icon: 'fa-circle-info' },
+        { file: 'v2/en/programs.html', label: 'Programs', icon: 'fa-layer-group' },
+        { file: 'v2/en/projects.html', label: 'Projects', icon: 'fa-diagram-project' },
+        { file: 'v2/en/media.html', label: 'Media Center', icon: 'fa-newspaper' },
+        { file: 'v2/en/participate.html', label: 'Join Us', icon: 'fa-handshake-angle' },
+        { file: 'v2/en/contact.html', label: 'Contact', icon: 'fa-envelope' },
+        { file: 'v2/en/post.html', label: 'Post template', icon: 'fa-file-lines' }
+    ];
 
     var state = {
-        token: null,
-        news: { posts: [] }, newsSha: null,
-        team: { members: [] }, teamSha: null,
+        news: { posts: [] },
+        team: { members: [] },
         editingId: null,
-        coverPath: null   // root-relative path of the chosen cover image
+        coverPath: null
     };
 
-    // ---------- helpers ----------
+    /* ---------- small helpers ---------- */
     function $(id) { return document.getElementById(id); }
-    function decodeTk() { try { return atob(CONFIG._tk).split('').reverse().join(''); } catch (e) { return null; } }
     function esc(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
-
-    function b64encode(str) {
-        var u = new TextEncoder().encode(str), bin = '';
-        for (var i = 0; i < u.length; i++) bin += String.fromCharCode(u[i]);
-        return btoa(bin);
-    }
-    function b64decodeUtf8(b64) {
-        var bin = atob((b64 || '').replace(/\s/g, '')), u = new Uint8Array(bin.length);
-        for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
-        return new TextDecoder('utf-8').decode(u);
-    }
-    function readDataURL(file) {
-        return new Promise(function (res, rej) { var r = new FileReader(); r.onload = function () { res(r.result); }; r.onerror = rej; r.readAsDataURL(file); });
-    }
     function toast(msg, kind) {
         var t = $('toast'); t.textContent = msg; t.className = 'toast show ' + (kind || '');
-        setTimeout(function () { t.className = 'toast'; }, 3200);
+        setTimeout(function () { t.className = 'toast'; }, 3500);
     }
-    function loading(on, text) { $('loadingText').textContent = text || 'جارٍ الحفظ...'; $('loading').className = 'loading' + (on ? ' show' : ''); }
-
-    // ---------- GitHub API ----------
-    function ghGet(path) {
-        return fetch(API + '/contents/' + path + '?ref=' + CONFIG.branch + '&t=' + Date.now(), {
-            headers: { 'Authorization': 'token ' + state.token }
-        }).then(function (r) { if (r.status === 404) return null; if (!r.ok) throw new Error('GET ' + path + ' ' + r.status); return r.json(); });
+    function loading(on, text) {
+        $('loadingText').textContent = text || 'جارٍ الحفظ...';
+        $('loading').className = 'loading' + (on ? ' show' : '');
     }
-    function ghPut(path, b64, message, sha) {
-        var body = { message: message, content: b64, branch: CONFIG.branch };
-        if (sha) body.sha = sha;
-        return fetch(API + '/contents/' + path, {
-            method: 'PUT',
-            headers: { 'Authorization': 'token ' + state.token, 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-        }).then(function (r) { if (!r.ok) return r.text().then(function (t) { throw new Error(t); }); return r.json(); });
-    }
-    // Upload an image file, return its root-relative path (/v2/uploads/..)
-    function uploadImageFile(file) {
-        return readDataURL(file).then(function (durl) {
-            var b64 = durl.split(',')[1];
-            var safe = (file.name || 'img').replace(/[^a-zA-Z0-9._-]/g, '_');
-            var path = 'v2/uploads/' + Date.now() + '_' + safe;
-            return ghPut(path, b64, 'Admin: upload image ' + safe, null).then(function () { return '/' + path; });
-        });
-    }
-    function saveNews() {
-        return ghGet('v2/data/news.json').then(function (cur) {
-            var sha = cur ? cur.sha : null;
-            return ghPut('v2/data/news.json', b64encode(JSON.stringify(state.news, null, 2)), 'Admin: update news', sha);
-        }).then(function (res) { state.newsSha = res.content.sha; });
-    }
-    function saveTeam() {
-        return ghGet('v2/data/team.json').then(function (cur) {
-            var sha = cur ? cur.sha : null;
-            return ghPut('v2/data/team.json', b64encode(JSON.stringify(state.team, null, 2)), 'Admin: update team', sha);
-        }).then(function (res) { state.teamSha = res.content.sha; });
+    function imgURL(rootRel) {
+        // preview URL for a stored root-relative path like /assets/.. or /v2/uploads/..
+        return CMS.base + rootRel;
     }
 
-    // ---------- Auth ----------
+    /* ---------- auth ---------- */
     function login() {
         var pwd = $('pwd').value.trim();
-        if (pwd !== CONFIG.password) { $('loginErr').style.display = 'block'; return; }
-        $('loginErr').style.display = 'none';
-        state.token = decodeTk() || localStorage.getItem('daam_admin_token');
-        if (!state.token) { toast('تعذّر الحصول على مفتاح الوصول', 'bad'); return; }
-        sessionStorage.setItem('daam_v2_admin', '1');
-        showApp();
+        if (!pwd) { $('loginErr').style.display = 'block'; return; }
+        loading(true, 'جارٍ التحقق...');
+        CMS.login(pwd).then(function (ok) {
+            loading(false);
+            if (!ok) { $('loginErr').style.display = 'block'; return; }
+            $('loginErr').style.display = 'none';
+            try { sessionStorage.setItem(PASSWORD_HINT_KEY, pwd); } catch (e) { }
+            showApp();
+        }).catch(function () { loading(false); $('loginErr').style.display = 'block'; });
+    }
+    function logout() {
+        try { sessionStorage.removeItem(PASSWORD_HINT_KEY); } catch (e) { }
+        location.reload();
     }
     function showApp() {
         $('login').classList.add('hidden');
         $('app').classList.remove('hidden');
-        loadAll();
+        renderPages();
+        loadData();
     }
-    function logout() { sessionStorage.removeItem('daam_v2_admin'); location.reload(); }
 
-    function loadAll() {
+    /* ---------- data load ---------- */
+    function loadData() {
         loading(true, 'جارٍ تحميل البيانات...');
-        Promise.all([ghGet('v2/data/news.json'), ghGet('v2/data/team.json')]).then(function (r) {
-            if (r[0]) { state.news = JSON.parse(b64decodeUtf8(r[0].content)); state.newsSha = r[0].sha; }
-            if (r[1]) { state.team = JSON.parse(b64decodeUtf8(r[1].content)); state.teamSha = r[1].sha; }
+        Promise.all([CMS.loadText('v2/data/news.json'), CMS.loadText('v2/data/team.json')]).then(function (r) {
+            if (r[0]) state.news = JSON.parse(r[0]);
+            if (r[1]) state.team = JSON.parse(r[1]);
             renderNews(); renderTeam(); loading(false);
-        }).catch(function (e) { loading(false); toast('تعذّر تحميل البيانات', 'bad'); console.error(e); });
+        }).catch(function (e) {
+            loading(false);
+            toast('تعذّر تحميل البيانات: ' + e.message, 'bad');
+        });
     }
 
-    // ---------- News list ----------
+    /* ---------- pages tab ---------- */
+    function renderPages() {
+        function card(p) {
+            return '<button class="page-card" data-file="' + p.file + '" data-label="' + esc(p.label) + '">'
+                + '<span class="ic"><i class="fas ' + p.icon + '"></i></span>'
+                + '<span><b>' + esc(p.label) + '</b><span>' + p.file.replace('v2/', '') + '</span></span>'
+                + '</button>';
+        }
+        $('pagesAr').innerHTML = PAGES_AR.map(card).join('');
+        $('pagesEn').innerHTML = PAGES_EN.map(card).join('');
+        document.querySelectorAll('.page-card').forEach(function (c) {
+            c.addEventListener('click', function () {
+                PageEditor.open(c.getAttribute('data-file'), c.getAttribute('data-label'));
+            });
+        });
+    }
+
+    /* ---------- news ---------- */
     function renderNews() {
         var list = $('newsList'), posts = state.news.posts || [];
         if (!posts.length) { list.innerHTML = '<p class="muted">لا توجد أخبار بعد. اضغط «خبر جديد» للإضافة.</p>'; return; }
         list.innerHTML = posts.map(function (p) {
             return '<div class="news-item">'
-                + '<div class="thumb"><img src="' + BASE + p.image + '" alt=""></div>'
+                + '<div class="thumb"><img src="' + imgURL(p.image) + '" alt=""></div>'
                 + '<div class="body"><span class="tag">' + esc(p.tag_ar || 'خبر') + '</span>'
                 + '<h3>' + esc(p.title_ar || '') + '</h3>'
                 + '<div class="meta"><i class="far fa-calendar"></i> ' + esc(p.date || '') + '</div>'
@@ -130,14 +126,20 @@
         list.querySelectorAll('[data-del]').forEach(function (b) { b.onclick = function () { delPost(b.getAttribute('data-del')); }; });
     }
 
-    // ---------- Post editor ----------
+    function saveNewsFile() {
+        return CMS.saveText('v2/data/news.json', JSON.stringify(state.news, null, 2), 'Admin: update news');
+    }
+    function saveTeamFile() {
+        return CMS.saveText('v2/data/team.json', JSON.stringify(state.team, null, 2), 'Admin: update team');
+    }
+
     function openPost(id) {
         var post = id ? (state.news.posts || []).filter(function (x) { return x.id === id; })[0] : null;
         state.editingId = id || null;
         $('modalTitle').textContent = post ? 'تعديل الخبر' : 'خبر جديد';
         $('f_tag_ar').value = post ? (post.tag_ar || '') : 'خبر';
         $('f_tag_en').value = post ? (post.tag_en || '') : 'News';
-        $('f_date').value = post ? (post.date || '') : '2025';
+        $('f_date').value = post ? (post.date || '') : new Date().getFullYear();
         $('f_title_ar').value = post ? (post.title_ar || '') : '';
         $('f_title_en').value = post ? (post.title_en || '') : '';
         $('f_excerpt_ar').value = post ? (post.excerpt_ar || '') : '';
@@ -145,7 +147,7 @@
         $('body_ar').innerHTML = post ? (post.body_ar || '') : '';
         $('body_en').innerHTML = post ? (post.body_en || '') : '';
         state.coverPath = post ? post.image : null;
-        setCoverPreview(state.coverPath ? BASE + state.coverPath : null);
+        setCoverPreview(state.coverPath ? imgURL(state.coverPath) : null);
         $('postModal').classList.add('open');
     }
     function closePost() { $('postModal').classList.remove('open'); }
@@ -153,7 +155,6 @@
         if (src) { $('coverImg').src = src; $('coverImg').style.display = 'block'; $('coverPh').style.display = 'none'; }
         else { $('coverImg').style.display = 'none'; $('coverPh').style.display = 'block'; }
     }
-
     function slug(s) { return (s || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''); }
 
     function savePost() {
@@ -174,21 +175,21 @@
         if (idx >= 0) posts[idx] = post; else posts.unshift(post);
 
         loading(true, 'جارٍ نشر الخبر...');
-        saveNews().then(function () {
+        saveNewsFile().then(function () {
             loading(false); closePost(); renderNews();
-            toast('تم نشر الخبر بنجاح ✓ (يظهر خلال دقيقة)', 'ok');
-        }).catch(function (e) { loading(false); toast('فشل الحفظ: ' + e.message, 'bad'); console.error(e); });
+            toast('تم نشر الخبر ✓ ' + CMS.publishDelayNote, 'ok');
+        }).catch(function (e) { loading(false); toast('فشل الحفظ: ' + e.message, 'bad'); });
     }
 
     function delPost(id) {
         if (!confirm('هل تريد حذف هذا الخبر نهائياً؟')) return;
         state.news.posts = (state.news.posts || []).filter(function (x) { return x.id !== id; });
         loading(true, 'جارٍ الحذف...');
-        saveNews().then(function () { loading(false); renderNews(); toast('تم حذف الخبر', 'ok'); })
+        saveNewsFile().then(function () { loading(false); renderNews(); toast('تم حذف الخبر', 'ok'); })
             .catch(function (e) { loading(false); toast('فشل الحذف: ' + e.message, 'bad'); });
     }
 
-    // ---------- Rich text editors ----------
+    /* ---------- rich text (news modal) ---------- */
     var savedRange = null;
     function rememberSel() { var s = window.getSelection(); if (s.rangeCount) savedRange = s.getRangeAt(0); }
     function restoreSel(area) { area.focus(); if (savedRange) { var s = window.getSelection(); s.removeAllRanges(); s.addRange(savedRange); } }
@@ -221,17 +222,16 @@
         area.addEventListener('mouseup', rememberSel);
         area.addEventListener('blur', rememberSel);
 
-        // command buttons: preventDefault on mousedown to keep selection
         bar.addEventListener('mousedown', function (e) {
             var b = e.target.closest('button[data-cmd]');
-            if (b) { e.preventDefault(); exec(b.getAttribute('data-cmd')); }
+            if (b) { e.preventDefault(); restoreSel(area); exec(b.getAttribute('data-cmd')); }
         });
         bar.querySelector('[data-block]').addEventListener('change', function () { restoreSel(area); exec('formatBlock', this.value); this.selectedIndex = 0; });
         bar.querySelector('[data-size]').addEventListener('change', function () { if (!this.value) return; restoreSel(area); exec('fontSize', this.value); this.selectedIndex = 0; });
         bar.querySelector('[data-fore]').addEventListener('input', function () { restoreSel(area); exec('foreColor', this.value); });
         bar.querySelector('[data-hi]').addEventListener('input', function () { restoreSel(area); exec('hiliteColor', this.value); });
         bar.querySelector('[data-link]').addEventListener('mousedown', function (e) {
-            e.preventDefault(); var u = prompt('أدخل الرابط:'); if (u) exec('createLink', u);
+            e.preventDefault(); var u = prompt('أدخل الرابط:'); if (u) { restoreSel(area); exec('createLink', u); }
         });
         bar.querySelector('[data-img]').addEventListener('mousedown', function (e) {
             e.preventDefault();
@@ -239,20 +239,20 @@
             inp.onchange = function () {
                 if (!inp.files[0]) return;
                 loading(true, 'جارٍ رفع الصورة...');
-                uploadImageFile(inp.files[0]).then(function (path) {
-                    loading(false); restoreSel(area); exec('insertImage', BASE + path);
-                }).catch(function (er) { loading(false); toast('فشل رفع الصورة', 'bad'); });
+                CMS.uploadImage(inp.files[0]).then(function (path) {
+                    loading(false); restoreSel(area); exec('insertImage', imgURL(path));
+                }).catch(function () { loading(false); toast('فشل رفع الصورة', 'bad'); });
             };
             inp.click();
         });
     }
 
-    // ---------- Team ----------
+    /* ---------- team ---------- */
     function renderTeam() {
         var list = $('teamList'), members = state.team.members || [];
         list.innerHTML = members.map(function (m, i) {
             return '<div class="team-card" data-i="' + i + '">'
-                + '<img class="ph" src="' + BASE + m.photo + '" data-photo title="اضغط لتغيير الصورة">'
+                + '<img class="ph" src="' + imgURL(m.photo) + '" data-photo title="اضغط لتغيير الصورة">'
                 + '<input data-name placeholder="الاسم" value="' + esc(m.name_ar || '') + '">'
                 + '<input data-role placeholder="المسمى (اختياري)" value="' + esc(m.role_ar || '') + '">'
                 + '<div class="row"><button class="btn danger sm" data-remove style="flex:1"><i class="fas fa-trash"></i> حذف</button></div>'
@@ -267,9 +267,9 @@
                 inp.onchange = function () {
                     if (!inp.files[0]) return;
                     loading(true, 'جارٍ رفع الصورة...');
-                    uploadImageFile(inp.files[0]).then(function (path) {
+                    CMS.uploadImage(inp.files[0]).then(function (path) {
                         state.team.members[i].photo = path; loading(false);
-                        readDataURL(inp.files[0]).then(function (d) { card.querySelector('[data-photo]').src = d; });
+                        CMS.fileToDataURL(inp.files[0]).then(function (d) { card.querySelector('[data-photo]').src = d; });
                         toast('تم رفع الصورة، اضغط «حفظ الفريق» للنشر', 'ok');
                     }).catch(function () { loading(false); toast('فشل رفع الصورة', 'bad'); });
                 };
@@ -287,11 +287,11 @@
     }
     function commitTeam() {
         loading(true, 'جارٍ نشر الفريق...');
-        saveTeam().then(function () { loading(false); toast('تم حفظ الفريق ونشره ✓', 'ok'); })
+        saveTeamFile().then(function () { loading(false); toast('تم حفظ الفريق ونشره ✓ ' + CMS.publishDelayNote, 'ok'); })
             .catch(function (e) { loading(false); toast('فشل الحفظ: ' + e.message, 'bad'); });
     }
 
-    // ---------- Wire up ----------
+    /* ---------- boot ---------- */
     document.addEventListener('DOMContentLoaded', function () {
         $('loginBtn').addEventListener('click', login);
         $('pwd').addEventListener('keydown', function (e) { if (e.key === 'Enter') login(); });
@@ -302,6 +302,7 @@
                 document.querySelectorAll('.tab').forEach(function (x) { x.classList.remove('active'); });
                 t.classList.add('active');
                 var tab = t.getAttribute('data-tab');
+                $('view-pages').classList.toggle('hidden', tab !== 'pages');
                 $('view-news').classList.toggle('hidden', tab !== 'news');
                 $('view-team').classList.toggle('hidden', tab !== 'team');
             });
@@ -315,9 +316,9 @@
         $('coverInput').addEventListener('change', function () {
             if (!this.files[0]) return;
             loading(true, 'جارٍ رفع الصورة...');
-            uploadImageFile(this.files[0]).then(function (path) {
+            CMS.uploadImage(this.files[0]).then(function (path) {
                 state.coverPath = path; loading(false);
-                readDataURL($('coverInput').files[0]).then(setCoverPreview);
+                CMS.fileToDataURL($('coverInput').files[0]).then(setCoverPreview);
             }).catch(function () { loading(false); toast('فشل رفع الصورة', 'bad'); });
         });
 
@@ -326,6 +327,13 @@
 
         document.querySelectorAll('.rt-wrap').forEach(buildToolbar);
 
-        if (sessionStorage.getItem('daam_v2_admin') === '1') { state.token = decodeTk(); if (state.token) showApp(); }
+        PageEditor.init({ toast: toast, loading: loading });
+
+        // auto-login within the same browser session
+        var saved = null;
+        try { saved = sessionStorage.getItem(PASSWORD_HINT_KEY); } catch (e) { }
+        if (saved) {
+            CMS.login(saved).then(function (ok) { if (ok) showApp(); });
+        }
     });
 })();

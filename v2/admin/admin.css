@@ -103,3 +103,28 @@ img{max-width:100%;display:block}
 @keyframes spin{to{transform:rotate(360deg)}}
 .muted{color:var(--muted)}
 .hidden{display:none!important}
+
+/* Pages grid */
+.pages-group{margin:18px 0 12px;font-size:1.05rem;color:var(--body)}
+.pages-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.page-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow-sm);display:flex;align-items:center;gap:14px;cursor:pointer;transition:.2s;text-align:start}
+.page-card:hover{border-color:var(--primary);transform:translateY(-2px);box-shadow:var(--shadow)}
+.page-card .ic{width:44px;height:44px;border-radius:12px;background:var(--bg-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.page-card b{display:block;font-size:1rem}
+.page-card span{font-size:.8rem;color:var(--muted)}
+
+/* Visual page editor */
+.ped{position:fixed;inset:0;z-index:60;background:#eef2f7;display:flex;flex-direction:column}
+.ped-top{display:flex;align-items:center;gap:14px;padding:10px 16px;background:var(--deep);color:#fff;flex-wrap:wrap}
+.ped-info{display:flex;flex-direction:column;line-height:1.3;margin-inline-end:auto}
+.ped-info b{font-size:1rem}
+.ped-hint{font-size:.78rem;color:#9fb6d4}
+.ped-count{font-size:.85rem;background:rgba(255,255,255,.12);padding:6px 14px;border-radius:100px}
+.ped-bar{display:flex;flex-wrap:wrap;gap:4px;padding:8px 12px;background:#fff;border-bottom:1px solid var(--line);align-items:center}
+.ped-bar button{width:36px;height:36px;border:1px solid var(--line);background:#fff;border-radius:8px;color:var(--ink);font-size:.92rem;display:inline-flex;align-items:center;justify-content:center}
+.ped-bar button:hover{background:var(--primary);color:#fff;border-color:var(--primary)}
+.ped-bar .sep{width:1px;height:26px;background:var(--line);margin:0 5px}
+.ped-bar select{height:36px;border:1px solid var(--line);border-radius:8px;padding:0 8px;background:#fff;font-family:inherit}
+.ped-bar label.color{width:36px;height:36px;border:1px solid var(--line);border-radius:8px;display:inline-flex;align-items:center;justify-content:center;position:relative;overflow:hidden;background:#fff;cursor:pointer}
+.ped-bar label.color input{position:absolute;inset:0;opacity:0;cursor:pointer}
+#pedFrame{flex:1;width:100%;border:0;background:#fff}
