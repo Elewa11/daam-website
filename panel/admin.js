@@ -250,40 +250,63 @@
     /* ---------- team ---------- */
     function renderTeam() {
         var list = $('teamList'), members = state.team.members || [];
+        if (!members.length) { list.innerHTML = '<p class="muted">لا يوجد أعضاء بعد. اضغط «عضو جديد» للإضافة.</p>'; return; }
         list.innerHTML = members.map(function (m, i) {
             return '<div class="team-card" data-i="' + i + '">'
-                + '<img class="ph" src="' + imgURL(m.photo) + '" data-photo title="اضغط لتغيير الصورة">'
-                + '<input data-name placeholder="الاسم" value="' + esc(m.name_ar || '') + '">'
-                + '<input data-role placeholder="المسمى (اختياري)" value="' + esc(m.role_ar || '') + '">'
-                + '<div class="row"><button class="btn danger sm" data-remove style="flex:1"><i class="fas fa-trash"></i> حذف</button></div>'
+                + '<div class="tc-move">'
+                + '<button class="mv" data-up title="تحريك لأعلى/لليمين" ' + (i === 0 ? 'disabled' : '') + '><i class="fas fa-arrow-up"></i></button>'
+                + '<span class="tc-order">' + (i + 1) + '</span>'
+                + '<button class="mv" data-down title="تحريك لأسفل/لليسار" ' + (i === members.length - 1 ? 'disabled' : '') + '><i class="fas fa-arrow-down"></i></button>'
+                + '</div>'
+                + '<img class="ph" src="' + imgURL(m.photo) + '" data-photo title="اضغط لتغيير الصورة" onerror="this.style.opacity=.35">'
+                + '<button class="tc-photo-btn" data-photo2><i class="fas fa-camera"></i> تغيير الصورة</button>'
+                + '<input data-k="name_ar" placeholder="الاسم (عربي)" value="' + esc(m.name_ar || '') + '">'
+                + '<input data-k="name_en" placeholder="Name (English)" dir="ltr" value="' + esc(m.name_en || '') + '">'
+                + '<input data-k="role_ar" placeholder="المسمى الوظيفي (عربي)" value="' + esc(m.role_ar || '') + '">'
+                + '<input data-k="role_en" placeholder="Role (English)" dir="ltr" value="' + esc(m.role_en || '') + '">'
+                + '<div class="row"><button class="btn danger sm" data-remove style="flex:1"><i class="fas fa-trash"></i> حذف العضو</button></div>'
                 + '</div>';
         }).join('');
         list.querySelectorAll('.team-card').forEach(function (card) {
             var i = +card.getAttribute('data-i');
-            card.querySelector('[data-name]').addEventListener('input', function () { state.team.members[i].name_ar = this.value; });
-            card.querySelector('[data-role]').addEventListener('input', function () { state.team.members[i].role_ar = this.value; });
-            card.querySelector('[data-photo]').addEventListener('click', function () {
-                var inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
-                inp.onchange = function () {
-                    if (!inp.files[0]) return;
-                    loading(true, 'جارٍ رفع الصورة...');
-                    CMS.uploadImage(inp.files[0]).then(function (path) {
-                        state.team.members[i].photo = path; loading(false);
-                        CMS.fileToDataURL(inp.files[0]).then(function (d) { card.querySelector('[data-photo]').src = d; });
-                        toast('تم رفع الصورة، اضغط «حفظ الفريق» للنشر', 'ok');
-                    }).catch(function () { loading(false); toast('فشل رفع الصورة', 'bad'); });
-                };
-                inp.click();
+            card.querySelectorAll('input[data-k]').forEach(function (inp) {
+                inp.addEventListener('input', function () { state.team.members[i][inp.getAttribute('data-k')] = this.value; });
             });
+            card.querySelector('[data-photo]').addEventListener('click', function () { pickPhoto(i, card); });
+            card.querySelector('[data-photo2]').addEventListener('click', function () { pickPhoto(i, card); });
+            var up = card.querySelector('[data-up]'), dn = card.querySelector('[data-down]');
+            if (up) up.addEventListener('click', function () { if (!up.disabled) moveMember(i, -1); });
+            if (dn) dn.addEventListener('click', function () { if (!dn.disabled) moveMember(i, 1); });
             card.querySelector('[data-remove]').addEventListener('click', function () {
                 if (!confirm('حذف هذا العضو؟')) return;
                 state.team.members.splice(i, 1); renderTeam();
             });
         });
     }
+    function pickPhoto(i, card) {
+        var inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+        inp.onchange = function () {
+            if (!inp.files[0]) return;
+            loading(true, 'جارٍ رفع الصورة...');
+            CMS.uploadImage(inp.files[0]).then(function (path) {
+                state.team.members[i].photo = path; loading(false);
+                CMS.fileToDataURL(inp.files[0]).then(function (d) { var im = card.querySelector('[data-photo]'); im.src = d; im.style.opacity = 1; });
+                toast('تم رفع الصورة، اضغط «حفظ الفريق ونشره»', 'ok');
+            }).catch(function () { loading(false); toast('فشل رفع الصورة', 'bad'); });
+        };
+        inp.click();
+    }
+    function moveMember(i, dir) {
+        var a = state.team.members, j = i + dir;
+        if (j < 0 || j >= a.length) return;
+        var t = a[i]; a[i] = a[j]; a[j] = t;
+        renderTeam();
+    }
     function addMember() {
         (state.team.members || (state.team.members = [])).push({ id: 'm' + Date.now(), name_ar: '', name_en: '', role_ar: '', role_en: '', photo: '/assets/images/team_1.png' });
         renderTeam();
+        var cards = $('teamList').querySelectorAll('.team-card');
+        if (cards.length) cards[cards.length - 1].scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
     function commitTeam() {
         loading(true, 'جارٍ نشر الفريق...');

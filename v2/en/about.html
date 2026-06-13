@@ -83,6 +83,19 @@
         </div>
     </section>
 
+    <!-- Team -->
+    <section class="section">
+        <div class="container">
+            <div class="section-head reveal">
+                <span class="eyebrow green">Our Team</span>
+                <h2>The People Behind the Foundation</h2>
+            </div>
+            <div class="grid-3" id="teamGrid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:24px;">
+                <p style="grid-column:1/-1;text-align:center;color:var(--muted);">Loading team...</p>
+            </div>
+        </div>
+    </section>
+
     <footer class="site-footer">
         <div class="container">
             <div class="footer-grid">
@@ -100,6 +113,24 @@
     </footer>
 
     <script src="../assets/js/main.js"></script>
+    <script>
+        (function () {
+            var path = location.pathname, i = path.indexOf('/v2/');
+            var BASE = i >= 0 ? path.slice(0, i) : '';
+            var grid = document.getElementById('teamGrid');
+            if (!grid) return;
+            fetch(BASE + '/v2/data/team.json?t=' + Date.now()).then(function (r) { return r.json(); }).then(function (data) {
+                var members = (data && data.members) || [];
+                if (!members.length) { grid.innerHTML = ''; return; }
+                grid.innerHTML = members.map(function (m) {
+                    var photo = BASE + m.photo;
+                    var name = m.name_en || m.name_ar || '';
+                    var role = (m.role_en || m.role_ar) ? '<p style="color:var(--muted);font-size:0.9rem;margin-top:2px;">' + (m.role_en || m.role_ar) + '</p>' : '';
+                    return '<div class="info-card reveal in"><img src="' + photo + '" alt="' + name + '" style="width:110px;height:110px;border-radius:50%;object-fit:cover;margin:0 auto 16px;box-shadow:var(--shadow-sm);"><h4>' + name + '</h4>' + role + '</div>';
+                }).join('');
+            }).catch(function () { grid.innerHTML = ''; });
+        })();
+    </script>
 </body>
 
 </html>

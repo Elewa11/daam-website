@@ -88,10 +88,19 @@ img{max-width:100%;display:block}
 
 /* Team */
 .team-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px}
-.team-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow-sm);text-align:center}
-.team-card .ph{width:96px;height:96px;border-radius:50%;object-fit:cover;margin:0 auto 12px;background:var(--bg-soft);cursor:pointer;border:2px solid var(--line)}
-.team-card input{width:100%;text-align:center;border:1px solid var(--line);border-radius:8px;padding:8px;margin-bottom:8px}
+.team-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow-sm);text-align:center;position:relative}
+.team-card .ph{width:96px;height:96px;border-radius:50%;object-fit:cover;margin:0 auto 8px;background:var(--bg-soft);cursor:pointer;border:2px solid var(--line)}
+.team-card .ph:hover{border-color:var(--primary)}
+.team-card .tc-photo-btn{display:inline-flex;align-items:center;gap:6px;background:var(--bg-soft);border:1px solid var(--line);border-radius:100px;padding:5px 14px;font-size:.82rem;color:var(--primary);font-weight:700;cursor:pointer;margin-bottom:12px}
+.team-card .tc-photo-btn:hover{background:var(--primary);color:#fff;border-color:var(--primary)}
+.team-card input{width:100%;text-align:center;border:1px solid var(--line);border-radius:8px;padding:9px;margin-bottom:8px;font-family:inherit}
+.team-card input:focus{outline:none;border-color:var(--primary)}
 .team-card .row{display:flex;gap:8px;margin-top:6px}
+.team-card .tc-move{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px}
+.team-card .tc-move .mv{width:34px;height:34px;border:1px solid var(--line);background:#fff;border-radius:8px;color:var(--primary);cursor:pointer}
+.team-card .tc-move .mv:hover:not([disabled]){background:var(--primary);color:#fff;border-color:var(--primary)}
+.team-card .tc-move .mv[disabled]{opacity:.3;cursor:not-allowed}
+.team-card .tc-order{min-width:30px;height:30px;border-radius:50%;background:var(--accent);color:var(--ink);font-weight:800;display:inline-flex;align-items:center;justify-content:center;font-size:.9rem}
 
 /* Toast + loading */
 .toast{position:fixed;bottom:24px;inset-inline-start:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:13px 24px;border-radius:100px;font-weight:700;opacity:0;pointer-events:none;transition:.3s;z-index:100}

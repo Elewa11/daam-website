@@ -78,7 +78,15 @@
             'body.cms-edit ' + TEXT_SEL.split(',').map(function (s) { return s + ':hover'; }).join(',body.cms-edit ') +
             '{outline:2px dashed rgba(0,74,173,.55);outline-offset:2px;cursor:text}' +
             'body.cms-edit img:hover{outline:3px dashed rgba(255,174,0,.9);outline-offset:2px;cursor:pointer}' +
-            '[contenteditable="true"]{outline:2px solid #ffae00!important;outline-offset:2px;min-width:10px}';
+            '[contenteditable="true"]{outline:2px solid #ffae00!important;outline-offset:2px;min-width:10px}' +
+            /* section tools */
+            'body.cms-edit>section{position:relative}' +
+            'body.cms-edit>section:hover{outline:2px solid rgba(0,74,173,.25);outline-offset:-2px}' +
+            '.cms-sec-ctl{position:absolute;top:10px;inset-inline-start:10px;display:flex;gap:6px;z-index:9999;opacity:0;transition:.15s;background:rgba(11,31,58,.95);padding:7px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.25)}' +
+            'body.cms-edit>section:hover>.cms-sec-ctl{opacity:1}' +
+            '.cms-sec-ctl button{width:34px;height:34px;border:none;border-radius:8px;background:#fff;color:#0b1f3a;cursor:pointer;font-size:.85rem;display:inline-flex;align-items:center;justify-content:center}' +
+            '.cms-sec-ctl button:hover{background:#ffae00}' +
+            '.cms-sec-ctl button[data-del]:hover{background:#e53e3e;color:#fff}';
         doc.head.appendChild(style);
         doc.body.classList.add('cms-edit');
 
@@ -99,11 +107,93 @@
                 if (s && s.rangeCount) state.savedRange = s.getRangeAt(0);
             });
         });
+
+        injectSectionTools();
+    }
+
+    /* ---------- section tools (add / delete / reorder / duplicate) ---------- */
+    function topSections(doc) {
+        return Array.prototype.filter.call(doc.body.children, function (el) { return el.tagName === 'SECTION'; });
+    }
+    function injectSectionTools() {
+        var doc = fdoc(); if (!doc || !doc.body) return;
+        doc.querySelectorAll('[data-cms-ctl]').forEach(function (e) { e.remove(); });
+        topSections(doc).forEach(function (sec) {
+            var bar = doc.createElement('div');
+            bar.setAttribute('data-cms-ctl', '1');
+            bar.className = 'cms-sec-ctl';
+            bar.setAttribute('contenteditable', 'false');
+            bar.innerHTML =
+                '<button data-up title="نقل لأعلى"><i class="fas fa-arrow-up"></i></button>'
+                + '<button data-down title="نقل لأسفل"><i class="fas fa-arrow-down"></i></button>'
+                + '<button data-dup title="نسخ القسم"><i class="fas fa-copy"></i></button>'
+                + '<button data-del title="حذف القسم"><i class="fas fa-trash"></i></button>';
+            bar.addEventListener('click', function (e) {
+                var b = e.target.closest('button'); if (!b) return;
+                e.preventDefault(); e.stopPropagation();
+                var win = frame().contentWindow;
+                if (b.hasAttribute('data-up')) {
+                    var pv = sec.previousElementSibling;
+                    while (pv && pv.tagName !== 'SECTION') pv = pv.previousElementSibling;
+                    if (pv) sec.parentNode.insertBefore(sec, pv);
+                } else if (b.hasAttribute('data-down')) {
+                    var nx = sec.nextElementSibling;
+                    while (nx && nx.tagName !== 'SECTION') nx = nx.nextElementSibling;
+                    if (nx) sec.parentNode.insertBefore(nx, sec);
+                } else if (b.hasAttribute('data-dup')) {
+                    var clone = sec.cloneNode(true);
+                    clone.querySelectorAll('[data-cms-ctl]').forEach(function (x) { x.remove(); });
+                    sec.parentNode.insertBefore(clone, sec.nextSibling);
+                } else if (b.hasAttribute('data-del')) {
+                    if (!win.confirm('حذف هذا القسم بالكامل؟')) return;
+                    sec.remove();
+                }
+                state.changes++; updateCount();
+                injectSectionTools();
+            });
+            sec.appendChild(bar);
+        });
+    }
+
+    function relImg(rootRel) { return relFromDir(state.dir, rootRel); }
+    function sectionTemplate(kind, en) {
+        var img = relImg('/assets/images/hero_team_egypt.png');
+        var t = {
+            ar: { sub: 'عنوان فرعي', title: 'عنوان القسم', desc: 'اكتب وصف القسم هنا...', c: 'عنوان البطاقة', cd: 'وصف مختصر للبطاقة.', cta: 'انضم إلينا', join: 'participate.html' },
+            en: { sub: 'Subtitle', title: 'Section title', desc: 'Write your section description here...', c: 'Card title', cd: 'A short card description.', cta: 'Join Us', join: 'participate.html' }
+        }[en ? 'en' : 'ar'];
+        if (kind === 'text')
+            return '<section class="section"><div class="container"><div class="section-head"><span class="eyebrow">' + t.sub + '</span><h2>' + t.title + '</h2><p>' + t.desc + '</p></div></div></section>';
+        if (kind === 'split')
+            return '<section class="section bg-soft"><div class="container grid-2"><div class="split-img"><img src="' + img + '" alt=""></div><div class="split-text"><span class="eyebrow">' + t.sub + '</span><h2>' + t.title + '</h2><p>' + t.desc + '</p></div></div></section>';
+        if (kind === 'cards') {
+            var card = '<div class="feature-card"><div class="feature-icon"><i class="fas fa-star"></i></div><h3>' + t.c + '</h3><p>' + t.cd + '</p></div>';
+            return '<section class="section"><div class="container"><div class="section-head"><span class="eyebrow">' + t.sub + '</span><h2>' + t.title + '</h2></div><div class="grid-3">' + card + card.replace('green', '') + card + '</div></div></section>';
+        }
+        if (kind === 'cta')
+            return '<section class="section"><div class="container"><div class="cta-band"><h2>' + t.title + '</h2><p>' + t.desc + '</p><a href="' + t.join + '" class="btn btn-accent btn-lg">' + t.cta + '</a></div></div></section>';
+        return '';
+    }
+    function addSection(kind) {
+        var doc = fdoc(); if (!doc) return;
+        var lang = (doc.documentElement.getAttribute('lang') || 'ar').toLowerCase();
+        var en = lang.indexOf('en') === 0;
+        var holder = doc.createElement('div');
+        holder.innerHTML = sectionTemplate(kind, en).trim();
+        var sec = holder.firstElementChild; if (!sec) return;
+        var footer = doc.querySelector('body > footer');
+        doc.body.insertBefore(sec, footer || null);
+        state.changes++; updateCount();
+        injectSectionTools();
+        sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        ui.toast(en ? 'تمت إضافة القسم — اضغط على نصوصه وصوره لتعديلها' : 'تمت إضافة القسم — اضغط على نصوصه وصوره لتعديلها', 'ok');
     }
 
     function handleClick(e) {
         var doc = fdoc();
         var t = e.target;
+
+        if (t.closest && t.closest('[data-cms-ctl]')) return;  // section control buttons
 
         if (t.closest && t.closest(SKIP_ZONES)) {
             ui.toast('هذا القسم يُدار من تبويب «الأخبار» أو «الفريق» في اللوحة', '');
@@ -214,7 +304,9 @@
             + '<button data-cmd="insertUnorderedList" title="قائمة نقاط"><i class="fas fa-list-ul"></i></button>'
             + '<button data-link title="إضافة رابط"><i class="fas fa-link"></i></button>'
             + '<button data-imgins title="إدراج صورة"><i class="fas fa-image"></i></button>'
-            + '<button data-cmd="removeFormat" title="مسح التنسيق"><i class="fas fa-eraser"></i></button>';
+            + '<button data-cmd="removeFormat" title="مسح التنسيق"><i class="fas fa-eraser"></i></button>'
+            + '<span class="sep"></span>'
+            + '<select data-addsec title="إضافة قسم جديد"><option value="">➕ إضافة قسم</option><option value="text">قسم نصي</option><option value="split">صورة + نص</option><option value="cards">ثلاث بطاقات</option><option value="cta">شريط دعوة (CTA)</option></select>';
 
         bar.addEventListener('mousedown', function (e) {
             var b = e.target.closest('button');
@@ -230,6 +322,10 @@
         });
         bar.querySelector('[data-fore]').addEventListener('input', function () { exec('foreColor', this.value); });
         bar.querySelector('[data-hi]').addEventListener('input', function () { exec('hiliteColor', this.value); });
+        bar.querySelector('[data-addsec]').addEventListener('change', function () {
+            if (this.value) addSection(this.value);
+            this.selectedIndex = 0;
+        });
     }
 
     /* ---------- save ---------- */
@@ -244,6 +340,7 @@
         // drop editor artifacts
         var b = clone.querySelector('base[data-cms-base]'); if (b) b.remove();
         var st = clone.querySelector('#cms-style'); if (st) st.remove();
+        clone.querySelectorAll('[data-cms-ctl]').forEach(function (el) { el.remove(); });  // section tool bars
         clone.querySelectorAll('[contenteditable]').forEach(function (el) { el.removeAttribute('contenteditable'); });
         var body = clone.querySelector('body'); if (body) body.classList.remove('cms-edit');
         if (body && body.getAttribute('class') === '') body.removeAttribute('class');
