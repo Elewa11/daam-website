@@ -26,6 +26,19 @@
             </div>
             <button class="btn full" id="loginBtn">تسجيل الدخول</button>
             <p class="err" id="loginErr">كلمة المرور غير صحيحة.</p>
+
+            <!-- One-time token setup (GitHub hosting only). Token is stored in
+                 this browser only and is never published to the site. -->
+            <div id="tokenSetup" class="token-setup hidden">
+                <div class="ts-divider"><span>تفعيل الحفظ — مرة واحدة</span></div>
+                <p class="ts-note">لتفعيل حفظ التعديلات، الصق <b>مفتاح الوصول</b> الخاص بك مرة واحدة. يُحفظ في هذا المتصفح فقط ولا يُرفع للموقع إطلاقاً.</p>
+                <div class="field-group">
+                    <label for="ghToken">مفتاح الوصول (GitHub Token)</label>
+                    <input type="password" id="ghToken" placeholder="ghp_..." autocomplete="off">
+                </div>
+                <button class="btn full accent" id="saveTokenBtn">حفظ وتفعيل</button>
+                <a class="ts-help" href="https://github.com/settings/tokens" target="_blank" rel="noopener">كيفية إنشاء المفتاح؟ (راجع الدليل)</a>
+            </div>
         </div>
     </div>
 

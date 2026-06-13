@@ -13,7 +13,9 @@
     var CONFIG = {
         owner: 'Elewa11', repo: 'daam-website', branch: 'main',
         password: 'admin123',
-        _tk: 'VXNTWnoxazkzNFUzZEdPZWlRcFdqdUU5Wm56ZkFIVlFVZlVWX3BoZw==',
+        // NOTE: no access token is stored in this file. On GitHub hosting the
+        // editor's personal access token is kept ONLY in their own browser
+        // (localStorage 'cms_gh_token'); it is never published to the site.
 
         // Absolute URL of the live site root (where /assets and /v2 live).
         // Leave '' for auto-detection; can also be overridden via
@@ -49,8 +51,8 @@
     var API = 'https://api.github.com/repos/' + CONFIG.owner + '/' + CONFIG.repo;
     var PHP_URL = lsGet('cms_api_url') || CONFIG.API_URL || 'api.php';
 
-    var token = null;   // github
-    var pwdMem = null;  // php (sent with every request)
+    var token = lsGet('cms_gh_token');   // github PAT — kept only in this browser
+    var pwdMem = null;                   // php (sent with every request)
 
     /* ---------- shared utils ---------- */
     function b64encode(str) {
@@ -70,15 +72,27 @@
             r.onerror = rej; r.readAsDataURL(file);
         });
     }
-    function decodeTk() { try { return atob(CONFIG._tk).split('').reverse().join(''); } catch (e) { return null; } }
     function safeName(name) { return (name || 'img').replace(/[^a-zA-Z0-9._-]/g, '_'); }
 
     /* ---------- GitHub backend ---------- */
     var GH = {
+        requiresToken: true,
+        hasToken: function () { return !!token; },
+        setToken: function (t) {
+            token = (t || '').trim();
+            try { localStorage.setItem('cms_gh_token', token); } catch (e) { }
+        },
+        clearToken: function () {
+            token = null;
+            try { localStorage.removeItem('cms_gh_token'); } catch (e) { }
+        },
         login: function (pwd) {
-            if (pwd !== CONFIG.password) return Promise.resolve(false);
-            token = decodeTk();
-            return Promise.resolve(!!token);
+            if (pwd !== CONFIG.password) return Promise.resolve({ ok: false, reason: 'password' });
+            if (!token) return Promise.resolve({ ok: false, reason: 'token' });
+            // verify the stored token still works
+            return fetch(API, { headers: { 'Authorization': 'token ' + token } })
+                .then(function (r) { return r.ok ? { ok: true } : { ok: false, reason: 'token' }; })
+                .catch(function () { return { ok: false, reason: 'token' }; });
         },
         loadText: function (path) {
             return fetch(API + '/contents/' + path + '?ref=' + CONFIG.branch + '&t=' + Date.now(), {
@@ -136,10 +150,14 @@
         });
     }
     var PH = {
+        requiresToken: false,
+        hasToken: function () { return true; },
+        setToken: function () { },
+        clearToken: function () { },
         login: function (pwd) {
             pwdMem = pwd;
-            return phpCall({ action: 'login' }).then(function () { return true; })
-                .catch(function () { pwdMem = null; return false; });
+            return phpCall({ action: 'login' }).then(function () { return { ok: true }; })
+                .catch(function () { pwdMem = null; return { ok: false, reason: 'password' }; });
         },
         loadText: function (path) {
             return phpCall({ action: 'get', path: path }).then(function (j) { return j.content; })
@@ -161,7 +179,11 @@
     window.CMS = {
         mode: MODE,
         siteURL: SITE_URL,                      // absolute, no trailing slash
-        login: function (pwd) { return impl.login(pwd); },
+        requiresToken: impl.requiresToken,       // true on GitHub hosting
+        hasToken: function () { return impl.hasToken(); },
+        setToken: function (t) { return impl.setToken(t); },
+        clearToken: function () { return impl.clearToken(); },
+        login: function (pwd) { return impl.login(pwd); },   // resolves { ok, reason }
         loadText: function (path) { return impl.loadText(path); },
         saveText: function (path, text, message) { return impl.saveText(path, text, message); },
         uploadImage: function (file) { return impl.uploadImage(file); },

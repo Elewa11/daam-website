@@ -55,17 +55,31 @@
     }
 
     /* ---------- auth ---------- */
+    function loginErr(msg) { var e = $('loginErr'); e.textContent = msg; e.style.display = 'block'; }
+    function showTokenSetup() { $('tokenSetup').classList.remove('hidden'); $('loginErr').style.display = 'none'; }
+    function hideTokenSetup() { $('tokenSetup').classList.add('hidden'); }
+
     function login() {
         var pwd = $('pwd').value.trim();
-        if (!pwd) { $('loginErr').style.display = 'block'; return; }
+        if (!pwd) { loginErr('أدخل كلمة المرور'); return; }
         loading(true, 'جارٍ التحقق...');
-        CMS.login(pwd).then(function (ok) {
+        CMS.login(pwd).then(function (res) {
             loading(false);
-            if (!ok) { $('loginErr').style.display = 'block'; return; }
-            $('loginErr').style.display = 'none';
-            try { sessionStorage.setItem(PASSWORD_HINT_KEY, pwd); } catch (e) { }
-            showApp();
-        }).catch(function () { loading(false); $('loginErr').style.display = 'block'; });
+            if (res && res.ok) {
+                $('loginErr').style.display = 'none'; hideTokenSetup();
+                try { sessionStorage.setItem(PASSWORD_HINT_KEY, pwd); } catch (e) { }
+                showApp();
+                return;
+            }
+            if (res && res.reason === 'token') { showTokenSetup(); return; }
+            loginErr('كلمة المرور غير صحيحة.');
+        }).catch(function () { loading(false); loginErr('تعذّر الاتصال، حاول مجدداً.'); });
+    }
+    function saveTokenAndLogin() {
+        var t = $('ghToken').value.trim();
+        if (!t) { return; }
+        CMS.setToken(t);
+        login();
     }
     function logout() {
         try { sessionStorage.removeItem(PASSWORD_HINT_KEY); } catch (e) { }
@@ -358,11 +372,15 @@
             im.src = CMS.siteURL + '/assets/images/logo_header.png';
         });
 
+        var st = $('saveTokenBtn'); if (st) st.addEventListener('click', saveTokenAndLogin);
+        var gt = $('ghToken'); if (gt) gt.addEventListener('keydown', function (e) { if (e.key === 'Enter') saveTokenAndLogin(); });
+
         // auto-login within the same browser session
         var saved = null;
         try { saved = sessionStorage.getItem(PASSWORD_HINT_KEY); } catch (e) { }
         if (saved) {
-            CMS.login(saved).then(function (ok) { if (ok) showApp(); });
+            $('pwd').value = saved;
+            CMS.login(saved).then(function (res) { if (res && res.ok) showApp(); });
         }
     });
 })();
