@@ -380,6 +380,7 @@
             });
             $('pedSave').addEventListener('click', save);
         },
-        open: open
+        open: open,
+        close: close
     };
 })();

@@ -85,6 +85,15 @@
         try { sessionStorage.removeItem(PASSWORD_HINT_KEY); } catch (e) { }
         location.reload();
     }
+    // Called by storage.js when the GitHub token is rejected (401) at any time.
+    function onAuthLost() {
+        try { if (window.PageEditor && PageEditor.close) PageEditor.close(); } catch (e) { }
+        $('app').classList.add('hidden');
+        $('login').classList.remove('hidden');
+        showTokenSetup();
+        if ($('ghToken')) $('ghToken').value = '';
+        toast('انتهت صلاحية مفتاح الوصول — يرجى إدخاله من جديد', 'bad');
+    }
     function showApp() {
         $('login').classList.add('hidden');
         $('app').classList.remove('hidden');
@@ -365,6 +374,7 @@
         document.querySelectorAll('.rt-wrap').forEach(buildToolbar);
 
         PageEditor.init({ toast: toast, loading: loading });
+        if (CMS.setAuthErrorHandler) CMS.setAuthErrorHandler(onAuthLost);
 
         // point logos and the "view site" link at the live site, wherever the panel is hosted
         var vs = $('viewSite'); if (vs) vs.href = CMS.siteURL + '/v2/index.html';

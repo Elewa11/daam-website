@@ -53,6 +53,13 @@
 
     var token = lsGet('cms_gh_token');   // github PAT — kept only in this browser
     var pwdMem = null;                   // php (sent with every request)
+    var onAuthErr = function () { };     // called when the GitHub token is rejected (401)
+
+    function authLost() {
+        token = null;
+        try { localStorage.removeItem('cms_gh_token'); } catch (e) { }
+        try { onAuthErr(); } catch (e) { }
+    }
 
     /* ---------- shared utils ---------- */
     function b64encode(str) {
@@ -98,6 +105,7 @@
             return fetch(API + '/contents/' + path + '?ref=' + CONFIG.branch + '&t=' + Date.now(), {
                 headers: { 'Authorization': 'token ' + token }
             }).then(function (r) {
+                if (r.status === 401) { authLost(); throw new Error('انتهت صلاحية مفتاح الوصول — يرجى إدخاله من جديد'); }
                 if (r.status === 404) return null;
                 if (!r.ok) throw new Error('load ' + path + ' → ' + r.status);
                 return r.json().then(function (j) { return b64decodeUtf8(j.content); });
@@ -115,6 +123,7 @@
                     body: JSON.stringify(body)
                 });
             }).then(function (r) {
+                if (r.status === 401) { authLost(); throw new Error('انتهت صلاحية مفتاح الوصول — يرجى إدخاله من جديد'); }
                 if (!r.ok) return r.text().then(function (t) { throw new Error(t); });
                 return r.json();
             });
@@ -129,6 +138,7 @@
                     headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' },
                     body: JSON.stringify(body)
                 }).then(function (r) {
+                    if (r.status === 401) { authLost(); throw new Error('انتهت صلاحية مفتاح الوصول — يرجى إدخاله من جديد'); }
                     if (!r.ok) return r.text().then(function (t) { throw new Error(t); });
                     return '/' + path;
                 });
@@ -183,6 +193,7 @@
         hasToken: function () { return impl.hasToken(); },
         setToken: function (t) { return impl.setToken(t); },
         clearToken: function () { return impl.clearToken(); },
+        setAuthErrorHandler: function (fn) { onAuthErr = (typeof fn === 'function') ? fn : function () { }; },
         login: function (pwd) { return impl.login(pwd); },   // resolves { ok, reason }
         loadText: function (path) { return impl.loadText(path); },
         saveText: function (path, text, message) { return impl.saveText(path, text, message); },
