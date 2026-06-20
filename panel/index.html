@@ -8,7 +8,7 @@
     <title>لوحة تحكم مؤسسة دعم</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="admin.css">
+    <link rel="stylesheet" href="admin.css?v=2">
     <link rel="icon" type="image/png" href="../assets/images/favicon.png">
 </head>
 
@@ -17,28 +17,38 @@
     <!-- LOGIN -->
     <div id="login" class="login-screen">
         <div class="login-card">
+            <span class="login-badge"><i class="fas fa-shield-halved"></i></span>
             <img src="../assets/images/logo_header.png" data-logo alt="مؤسسة دعم" class="logo" style="filter:brightness(0) invert(0)">
             <h1>لوحة تحكم الموقع</h1>
-            <p class="sub">تحرير صفحات الموقع، الأخبار، وفريق العمل</p>
+            <p class="sub">منطقة خاصة بفريق مؤسسة دعم لإدارة محتوى الموقع</p>
+
             <div class="field-group">
                 <label for="pwd">كلمة المرور</label>
-                <input type="password" id="pwd" placeholder="أدخل كلمة المرور" autocomplete="current-password">
+                <div class="input-wrap">
+                    <i class="fas fa-lock pre"></i>
+                    <input type="password" id="pwd" placeholder="أدخل كلمة المرور" autocomplete="current-password">
+                    <button type="button" class="toggle-pwd" id="togglePwd" aria-label="إظهار كلمة المرور"><i class="fas fa-eye"></i></button>
+                </div>
             </div>
-            <button class="btn full" id="loginBtn">تسجيل الدخول</button>
+            <button class="btn full" id="loginBtn"><i class="fas fa-right-to-bracket"></i> تسجيل الدخول</button>
             <p class="err" id="loginErr">كلمة المرور غير صحيحة.</p>
 
-            <!-- One-time token setup (GitHub hosting only). Token is stored in
-                 this browser only and is never published to the site. -->
+            <!-- One-time token setup. Token is stored in this browser only, never published. -->
             <div id="tokenSetup" class="token-setup hidden">
-                <div class="ts-divider"><span>تفعيل الحفظ — مرة واحدة</span></div>
-                <p class="ts-note">لتفعيل حفظ التعديلات، الصق <b>مفتاح الوصول</b> الخاص بك مرة واحدة. يُحفظ في هذا المتصفح فقط ولا يُرفع للموقع إطلاقاً.</p>
+                <div class="ts-divider"><span>تفعيل الحفظ — مرة واحدة على هذا الجهاز</span></div>
+                <p class="ts-note"><i class="fas fa-circle-info"></i> لتفعيل حفظ التعديلات، الصق <b>مفتاح الوصول</b> الخاص بك. يُحفظ في متصفّحك فقط ولا يُرفع للموقع إطلاقاً.</p>
                 <div class="field-group">
                     <label for="ghToken">مفتاح الوصول (GitHub Token)</label>
-                    <input type="password" id="ghToken" placeholder="ghp_..." autocomplete="off">
+                    <div class="input-wrap">
+                        <i class="fas fa-key pre"></i>
+                        <input type="password" id="ghToken" placeholder="github_pat_… أو ghp_…" autocomplete="off">
+                    </div>
                 </div>
-                <button class="btn full accent" id="saveTokenBtn">حفظ وتفعيل</button>
-                <a class="ts-help" href="https://github.com/settings/tokens" target="_blank" rel="noopener">كيفية إنشاء المفتاح؟ (راجع الدليل)</a>
+                <button class="btn full accent" id="saveTokenBtn"><i class="fas fa-circle-check"></i> حفظ وتفعيل</button>
+                <a class="ts-help" href="https://github.com/Elewa11/daam-website/blob/main/panel/README.md" target="_blank" rel="noopener"><i class="fas fa-circle-question"></i> دليل إنشاء المفتاح خطوة بخطوة</a>
             </div>
+
+            <p class="login-foot"><i class="fas fa-lock"></i> اتصال آمن عبر HTTPS • خاص بالفريق فقط</p>
         </div>
     </div>
 
@@ -164,6 +174,15 @@
     <script src="storage.js?v=7"></script>
     <script src="page-editor.js?v=7"></script>
     <script src="admin.js?v=7"></script>
+    <script>
+        (function () {
+            var t = document.getElementById('togglePwd'), p = document.getElementById('pwd');
+            if (t && p) t.addEventListener('click', function () {
+                var show = p.type === 'password'; p.type = show ? 'text' : 'password';
+                t.querySelector('i').className = show ? 'fas fa-eye-slash' : 'fas fa-eye';
+            });
+        })();
+    </script>
 </body>
 
 </html>
