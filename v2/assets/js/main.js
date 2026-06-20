@@ -15,14 +15,19 @@
     var toggle = document.querySelector('.nav-toggle');
     var menu = document.querySelector('.nav-menu');
     if (toggle && menu) {
+        if (!menu.id) menu.id = 'primary-nav';
+        toggle.setAttribute('aria-controls', menu.id);
+        toggle.setAttribute('aria-expanded', 'false');
         toggle.addEventListener('click', function () {
-            menu.classList.toggle('open');
+            var open = menu.classList.toggle('open');
             toggle.classList.toggle('active');
+            toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
         });
         menu.querySelectorAll('a').forEach(function (a) {
             a.addEventListener('click', function () {
                 menu.classList.remove('open');
                 toggle.classList.remove('active');
+                toggle.setAttribute('aria-expanded', 'false');
             });
         });
     }
@@ -67,11 +72,24 @@
         counters.forEach(animateCount);
     }
 
-    // FAQ accordion
+    // FAQ accordion (keyboard accessible)
     document.querySelectorAll('.faq-q').forEach(function (q) {
-        q.addEventListener('click', function () {
-            q.parentElement.classList.toggle('open');
+        q.setAttribute('role', 'button');
+        q.setAttribute('tabindex', '0');
+        q.setAttribute('aria-expanded', 'false');
+        function toggleFaq() {
+            var open = q.parentElement.classList.toggle('open');
+            q.setAttribute('aria-expanded', open ? 'true' : 'false');
+        }
+        q.addEventListener('click', toggleFaq);
+        q.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleFaq(); }
         });
+    });
+
+    // Accessible names for placeholder-only newsletter inputs
+    document.querySelectorAll('.f-news input[type=email]').forEach(function (i) {
+        if (!i.getAttribute('aria-label')) i.setAttribute('aria-label', i.getAttribute('placeholder') || 'البريد الإلكتروني');
     });
 
     // Footer year

@@ -7,7 +7,7 @@
     <meta name="description" content="خبر من المركز الإعلامي لمؤسسة دعم للتنمية المستدامة.">
     <title>المركز الإعلامي | مؤسسة دعم</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="/v2/assets/css/style.css">
     <link rel="icon" type="image/png" href="/assets/images/favicon.png">
@@ -16,17 +16,21 @@
     <link rel="alternate" hreflang="ar" href="https://daamfoundation.org/post">
     <link rel="alternate" hreflang="en" href="https://daamfoundation.org/en/post">
     <link rel="alternate" hreflang="x-default" href="https://daamfoundation.org/post">
-    <meta property="og:type" content="website">
+    <meta property="og:type" content="article">
     <meta property="og:site_name" content="مؤسسة دعم للتنمية المستدامة">
     <meta property="og:locale" content="ar_EG">
     <meta property="og:title" content="المركز الإعلامي | مؤسسة دعم">
     <meta property="og:description" content="خبر من المركز الإعلامي لمؤسسة دعم للتنمية المستدامة.">
     <meta property="og:url" content="https://daamfoundation.org/post">
-    <meta property="og:image" content="https://daamfoundation.org/assets/images/hero_community_egypt.png">
+    <meta property="og:image" content="https://daamfoundation.org/assets/images/og-image.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="المركز الإعلامي | مؤسسة دعم">
     <meta name="twitter:description" content="خبر من المركز الإعلامي لمؤسسة دعم للتنمية المستدامة.">
-    <meta name="twitter:image" content="https://daamfoundation.org/assets/images/hero_community_egypt.png">
+    <meta name="twitter:image" content="https://daamfoundation.org/assets/images/og-image.png">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/images/apple-touch-icon.png">
+    <meta name="theme-color" content="#0f172a">
+    <meta property="og:locale:alternate" content="en_US">
 </head>
 
 <body>
@@ -76,7 +80,7 @@
                 <div>
                     <img src="/assets/images/logo_header.png" alt="مؤسسة دعم" class="f-logo">
                     <p>مؤسسة تنموية مصرية غير ربحية ملتزمة بدفع عجلة التنمية الشاملة.</p>
-                    <div class="f-social"><a href="#"><i class="fab fa-facebook-f"></i></a><a href="#"><i class="fab fa-instagram"></i></a><a href="#"><i class="fab fa-linkedin-in"></i></a><a href="#"><i class="fab fa-youtube"></i></a></div>
+                    <div class="f-social"><a href="#" aria-label="Facebook"><i class="fab fa-facebook-f" aria-hidden="true"></i></a><a href="#" aria-label="Instagram"><i class="fab fa-instagram" aria-hidden="true"></i></a><a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in" aria-hidden="true"></i></a><a href="#" aria-label="YouTube"><i class="fab fa-youtube" aria-hidden="true"></i></a></div>
                 </div>
                 <div><h4>روابط سريعة</h4><ul><li><a href="/about">من نحن</a></li><li><a href="/programs">برامجنا</a></li><li><a href="/projects">مشروعاتنا</a></li><li><a href="/media">المركز الإعلامي</a></li><li><a href="/participate">انضم إلينا</a></li><li><a href="/contact">تواصل معنا</a></li></ul></div>
                 <div><h4>اشترك في نشرتنا</h4><p style="margin-bottom:12px;">اشترك في نشرتنا الإخبارية ليصلك جديدنا.</p><form class="f-news" onsubmit="return false;"><input type="email" placeholder="بريدك الإلكتروني"><button type="submit" class="btn btn-accent" style="padding:12px 20px;">اشترك</button></form></div>
@@ -86,7 +90,7 @@
         <div class="footer-bottom"><div class="container">حقوق النشر © <span data-year>2025</span> مؤسسة دعم للتنمية المستدامة.</div></div>
     </footer>
 
-    <script src="/v2/assets/js/main.js"></script>
+    <script src="/v2/assets/js/main.js?v=2"></script>
     <script>
         (function () {
             var path = location.pathname, i = path.indexOf('/v2/');
@@ -97,6 +101,7 @@
                 var p = ((data && data.posts) || []).filter(function (x) { return x.id === id; })[0];
                 if (!p) { document.getElementById('postTitle').textContent = 'الخبر غير موجود'; document.getElementById('postBody').innerHTML = '<p>عذراً، لم يتم العثور على هذا الخبر. <a href="/media">العودة للأخبار</a></p>'; return; }
                 document.title = (p.title_ar || 'خبر') + ' | مؤسسة دعم';
+                (function(){function M(s,a,v){var e=document.querySelector(s); if(e&&v!=null) e.setAttribute(a,v);}var u='https://daamfoundation.org/post?id='+encodeURIComponent(id),img=p.image?('https://daamfoundation.org'+p.image):null,t=(p.title_ar||'')+' | مؤسسة دعم',d=p.excerpt_ar||'';M('link[rel=canonical]','href',u);M('meta[property="og:url"]','content',u);M('meta[property="og:title"]','content',t);M('meta[property="og:description"]','content',d);M('meta[property="og:image"]','content',img);M('meta[name="twitter:title"]','content',t);M('meta[name="twitter:description"]','content',d);M('meta[name="twitter:image"]','content',img);})();
                 document.getElementById('heroImg').src = BASE + p.image;
                 document.getElementById('postTag').textContent = p.tag_ar || 'خبر';
                 document.getElementById('postTitle').textContent = p.title_ar || '';

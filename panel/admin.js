@@ -377,7 +377,7 @@
         if (CMS.setAuthErrorHandler) CMS.setAuthErrorHandler(onAuthLost);
 
         // point logos and the "view site" link at the live site, wherever the panel is hosted
-        var vs = $('viewSite'); if (vs) vs.href = CMS.siteURL + '/v2/index.html';
+        var vs = $('viewSite'); if (vs) vs.href = CMS.siteURL + '/';
         document.querySelectorAll('img[data-logo]').forEach(function (im) {
             im.src = CMS.siteURL + '/assets/images/logo_header.png';
         });

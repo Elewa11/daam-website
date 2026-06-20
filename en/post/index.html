@@ -7,7 +7,7 @@
     <meta name="description" content="A news post from the Media Center of Da'am Foundation for Sustainable Development.">
     <title>Media Center | Da'am Foundation</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="/v2/assets/css/style.css">
     <link rel="icon" type="image/png" href="/assets/images/favicon.png">
@@ -16,17 +16,21 @@
     <link rel="alternate" hreflang="ar" href="https://daamfoundation.org/post">
     <link rel="alternate" hreflang="en" href="https://daamfoundation.org/en/post">
     <link rel="alternate" hreflang="x-default" href="https://daamfoundation.org/post">
-    <meta property="og:type" content="website">
+    <meta property="og:type" content="article">
     <meta property="og:site_name" content="Da'am Foundation for Sustainable Development">
     <meta property="og:locale" content="en_US">
     <meta property="og:title" content="Media Center | Da'am Foundation">
     <meta property="og:description" content="A news post from the Media Center of Da'am Foundation for Sustainable Development.">
     <meta property="og:url" content="https://daamfoundation.org/en/post">
-    <meta property="og:image" content="https://daamfoundation.org/assets/images/hero_community_egypt.png">
+    <meta property="og:image" content="https://daamfoundation.org/assets/images/og-image.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Media Center | Da'am Foundation">
     <meta name="twitter:description" content="A news post from the Media Center of Da'am Foundation for Sustainable Development.">
-    <meta name="twitter:image" content="https://daamfoundation.org/assets/images/hero_community_egypt.png">
+    <meta name="twitter:image" content="https://daamfoundation.org/assets/images/og-image.png">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/images/apple-touch-icon.png">
+    <meta name="theme-color" content="#0f172a">
+    <meta property="og:locale:alternate" content="ar_EG">
 </head>
 
 <body>
@@ -76,7 +80,7 @@
                 <div>
                     <img src="/assets/images/logo_header.png" alt="Da'am" class="f-logo">
                     <p>Egyptian non-profit development foundation committed to driving comprehensive development.</p>
-                    <div class="f-social"><a href="#"><i class="fab fa-facebook-f"></i></a><a href="#"><i class="fab fa-instagram"></i></a><a href="#"><i class="fab fa-linkedin-in"></i></a><a href="#"><i class="fab fa-youtube"></i></a></div>
+                    <div class="f-social"><a href="#" aria-label="Facebook"><i class="fab fa-facebook-f" aria-hidden="true"></i></a><a href="#" aria-label="Instagram"><i class="fab fa-instagram" aria-hidden="true"></i></a><a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in" aria-hidden="true"></i></a><a href="#" aria-label="YouTube"><i class="fab fa-youtube" aria-hidden="true"></i></a></div>
                 </div>
                 <div><h4>Quick Links</h4><ul><li><a href="/en/about">About Us</a></li><li><a href="/en/programs">Programs</a></li><li><a href="/en/projects">Our Projects</a></li><li><a href="/en/media">Media Center</a></li><li><a href="/en/participate">Join Us</a></li><li><a href="/en/contact">Contact Us</a></li></ul></div>
                 <div><h4>Newsletter</h4><p style="margin-bottom:12px;">Subscribe to our newsletter to stay updated.</p><form class="f-news" onsubmit="return false;"><input type="email" placeholder="Your Email"><button type="submit" class="btn btn-accent" style="padding:12px 20px;">Subscribe</button></form></div>
@@ -86,7 +90,7 @@
         <div class="footer-bottom"><div class="container">Copyright © <span data-year>2025</span> Da'am Foundation for Sustainable Development.</div></div>
     </footer>
 
-    <script src="/v2/assets/js/main.js"></script>
+    <script src="/v2/assets/js/main.js?v=2"></script>
     <script>
         (function () {
             var path = location.pathname, i = path.indexOf('/v2/');
@@ -97,6 +101,7 @@
                 var p = ((data && data.posts) || []).filter(function (x) { return x.id === id; })[0];
                 if (!p) { document.getElementById('postTitle').textContent = 'Post not found'; document.getElementById('postBody').innerHTML = '<p>Sorry, this post was not found. <a href="/en/media">Back to News</a></p>'; return; }
                 document.title = (p.title_en || 'News') + ' | Da\'am Foundation';
+                (function(){function M(s,a,v){var e=document.querySelector(s); if(e&&v!=null) e.setAttribute(a,v);}var u='https://daamfoundation.org/en/post?id='+encodeURIComponent(id),img=p.image?('https://daamfoundation.org'+p.image):null,t=(p.title_en||'')+' | Da\'am Foundation',d=p.excerpt_en||'';M('link[rel=canonical]','href',u);M('meta[property="og:url"]','content',u);M('meta[property="og:title"]','content',t);M('meta[property="og:description"]','content',d);M('meta[property="og:image"]','content',img);M('meta[name="twitter:title"]','content',t);M('meta[name="twitter:description"]','content',d);M('meta[name="twitter:image"]','content',img);})();
                 document.getElementById('heroImg').src = BASE + p.image;
                 document.getElementById('postTag').textContent = p.tag_en || 'News';
                 document.getElementById('postTitle').textContent = p.title_en || '';
