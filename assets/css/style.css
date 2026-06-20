@@ -208,8 +208,8 @@ header.scrolled {
     height: 70px;
     /* Increased to fit 90px header */
     width: auto;
-    filter: none;
-    /* Show original colors */
+    filter: brightness(0) invert(1);
+    /* White version — shows clean on the dark header */
     object-fit: contain;
 }
 
@@ -573,7 +573,7 @@ header.scrolled {
 
 .card-modern-icon {
     position: absolute;
-    bottom: -25px;
+    bottom: 16px;
     right: 30px;
     width: 60px;
     height: 60px;
