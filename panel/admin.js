@@ -398,12 +398,29 @@
             var rl = x.role === 'admin' ? '👑 مدير (كل الصلاحيات)' : '📰 محرر أخبار';
             var del = (x.u === 'admin' || (currentUser && x.u === currentUser.u)) ? ''
                 : '<button class="btn danger sm" data-deluser="' + esc(x.u) + '"><i class="fas fa-trash"></i> حذف</button>';
+            var chg = '<button class="btn ghost sm" data-chguser="' + esc(x.u) + '"><i class="fas fa-key"></i> كلمة المرور</button>';
             return '<div class="news-item"><div class="body" style="padding:16px;">'
                 + '<h3>' + esc(x.name || x.u) + '</h3>'
                 + '<div class="meta"><i class="fas fa-user"></i> ' + esc(x.u) + ' • ' + rl + '</div>'
-                + '<div class="row">' + del + '</div></div></div>';
+                + '<div class="row">' + chg + del + '</div></div></div>';
         }).join('');
         list.querySelectorAll('[data-deluser]').forEach(function (b) { b.onclick = function () { delUser(b.getAttribute('data-deluser')); }; });
+        list.querySelectorAll('[data-chguser]').forEach(function (b) { b.onclick = function () { changePassword(b.getAttribute('data-chguser')); }; });
+    }
+    function changePassword(u) {
+        var np = prompt('كلمة المرور الجديدة للحساب «' + u + '»:');
+        if (np === null) return;
+        np = np.trim();
+        if (np.length < 6) { toast('كلمة المرور قصيرة (6 أحرف على الأقل)', 'bad'); return; }
+        var user = (usersData.users || []).filter(function (x) { return x.u === u; })[0];
+        if (!user) return;
+        var salt = randSaltHex(), iter = usersData.iter || 100000;
+        loading(true, 'جارٍ تحديث كلمة المرور...');
+        pbkdf2Hex(np, salt, iter).then(function (h) {
+            user.salt = salt; user.h = h;
+            saveUsersFile().then(function () { loading(false); toast('تم تغيير كلمة المرور ✓ ' + CMS.publishDelayNote, 'ok'); })
+                .catch(function (e) { loading(false); toast('فشل: ' + e.message, 'bad'); });
+        });
     }
     function addUser() {
         var u = ($('nu_user').value || '').trim(), nm = ($('nu_name').value || '').trim(), p = $('nu_pass').value || '', role = $('nu_role').value;
