@@ -23,6 +23,14 @@
             <p class="sub">منطقة خاصة بفريق مؤسسة دعم لإدارة محتوى الموقع</p>
 
             <div class="field-group">
+                <label for="username">اسم المستخدم</label>
+                <div class="input-wrap">
+                    <i class="fas fa-user pre"></i>
+                    <input type="text" id="username" placeholder="اسم المستخدم" autocomplete="username" dir="ltr">
+                </div>
+            </div>
+
+            <div class="field-group">
                 <label for="pwd">كلمة المرور</label>
                 <div class="input-wrap">
                     <i class="fas fa-lock pre"></i>
@@ -60,6 +68,7 @@
                 <b>لوحة التحكم</b>
             </div>
             <div class="actions">
+                <span class="link" id="whoami" style="cursor:default"></span>
                 <a class="link" id="viewSite" href="../index.html" target="_blank"><i class="fas fa-external-link-alt"></i> عرض الموقع</a>
                 <button class="btn ghost sm" id="logoutBtn"><i class="fas fa-right-from-bracket"></i> خروج</button>
             </div>
@@ -70,6 +79,7 @@
                 <button class="tab active" data-tab="pages">📄 صفحات الموقع</button>
                 <button class="tab" data-tab="news">📰 الأخبار</button>
                 <button class="tab" data-tab="team">👥 فريق العمل</button>
+                <button class="tab" data-tab="users">🔑 المستخدمون</button>
             </div>
 
             <!-- PAGES VIEW -->
@@ -101,6 +111,27 @@
                 </div>
                 <div class="team-list" id="teamList"></div>
                 <div style="margin-top:20px"><button class="btn" id="saveTeamBtn"><i class="fas fa-cloud-arrow-up"></i> حفظ الفريق ونشره</button></div>
+            </div>
+
+            <!-- USERS VIEW (admin only) -->
+            <div id="view-users" class="hidden">
+                <div class="view-head">
+                    <h2>المستخدمون والصلاحيات</h2>
+                    <span class="muted">أنشئ حسابات للفريق وحدّد صلاحية كل واحد</span>
+                </div>
+                <div style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px;box-shadow:var(--shadow-sm);max-width:780px;">
+                    <h3 style="margin-bottom:16px;">➕ إضافة حساب جديد</h3>
+                    <div class="grid2">
+                        <div class="field-group"><label>الاسم</label><input id="nu_name" placeholder="اسم الموظف"></div>
+                        <div class="field-group"><label>اسم المستخدم (للدخول)</label><input id="nu_user" placeholder="مثال: ahmed" dir="ltr" autocomplete="off"></div>
+                    </div>
+                    <div class="grid2">
+                        <div class="field-group"><label>كلمة المرور</label><input id="nu_pass" type="text" placeholder="كلمة مرور قوية" dir="ltr" autocomplete="off"></div>
+                        <div class="field-group"><label>الصلاحية</label><select id="nu_role"><option value="news">📰 محرر أخبار (المركز الإعلامي فقط)</option><option value="admin">👑 مدير (كل الصلاحيات)</option></select></div>
+                    </div>
+                    <button class="btn accent" id="addUserBtn"><i class="fas fa-user-plus"></i> إنشاء الحساب</button>
+                </div>
+                <div class="news-list" id="usersList" style="margin-top:22px"></div>
             </div>
         </div>
     </div>
@@ -171,9 +202,9 @@
     <div class="toast" id="toast"></div>
     <div class="loading" id="loading"><div class="spinner"></div><p id="loadingText" class="muted">جارٍ الحفظ...</p></div>
 
-    <script src="storage.js?v=7"></script>
-    <script src="page-editor.js?v=7"></script>
-    <script src="admin.js?v=7"></script>
+    <script src="storage.js?v=8"></script>
+    <script src="page-editor.js?v=8"></script>
+    <script src="admin.js?v=8"></script>
     <script>
         (function () {
             var t = document.getElementById('togglePwd'), p = document.getElementById('pwd');

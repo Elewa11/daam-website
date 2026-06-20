@@ -104,6 +104,11 @@
                 .then(function (r) { return r.ok ? { ok: true } : { ok: false, reason: 'token' }; })
                 .catch(function () { return { ok: false, reason: 'token' }; });
         },
+        checkToken: function () {
+            if (!token) return Promise.resolve(false);
+            return fetch(API, { headers: { 'Authorization': 'token ' + token } })
+                .then(function (r) { return r.ok; }).catch(function () { return false; });
+        },
         loadText: function (path) {
             return fetch(API + '/contents/' + path + '?ref=' + CONFIG.branch + '&t=' + Date.now(), {
                 headers: { 'Authorization': 'token ' + token }
@@ -172,6 +177,7 @@
             return phpCall({ action: 'login' }).then(function () { return { ok: true }; })
                 .catch(function () { pwdMem = null; return { ok: false, reason: 'password' }; });
         },
+        checkToken: function () { return Promise.resolve(true); },
         loadText: function (path) {
             return phpCall({ action: 'get', path: path }).then(function (j) { return j.content; })
                 .catch(function (e) { if (String(e.message).indexOf('not found') !== -1) return null; throw e; });
@@ -198,6 +204,7 @@
         clearToken: function () { return impl.clearToken(); },
         setAuthErrorHandler: function (fn) { onAuthErr = (typeof fn === 'function') ? fn : function () { }; },
         login: function (pwd) { return impl.login(pwd); },   // resolves { ok, reason }
+        checkToken: function () { return impl.checkToken(); }, // resolves bool (token valid)
         loadText: function (path) { return impl.loadText(path); },
         saveText: function (path, text, message) { return impl.saveText(path, text, message); },
         uploadImage: function (file) { return impl.uploadImage(file); },

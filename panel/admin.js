@@ -8,6 +8,27 @@
     'use strict';
 
     var PASSWORD_HINT_KEY = 'daam_v2_admin';
+    var SESSION_KEY = 'daam_v2_session';
+    var currentUser = null;                       // { u, name, role }
+    var usersData = { iter: 100000, users: [] };
+
+    /* ---------- account auth (multi-user, role-based) ---------- */
+    function loadUsers() {
+        return fetch('users.json?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.json(); });
+    }
+    function pbkdf2Hex(password, saltHex, iter) {
+        var enc = new TextEncoder();
+        var salt = Uint8Array.from(saltHex.match(/.{2}/g).map(function (b) { return parseInt(b, 16); }));
+        return crypto.subtle.importKey('raw', enc.encode(password), { name: 'PBKDF2' }, false, ['deriveBits'])
+            .then(function (key) {
+                return crypto.subtle.deriveBits({ name: 'PBKDF2', salt: salt, iterations: iter, hash: 'SHA-256' }, key, 256);
+            }).then(function (bits) {
+                return Array.from(new Uint8Array(bits)).map(function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+            });
+    }
+    function randSaltHex() {
+        return Array.from(crypto.getRandomValues(new Uint8Array(16))).map(function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+    }
 
     // Editable site pages shown in the "صفحات الموقع" tab
     var PAGES_AR = [
@@ -60,20 +81,27 @@
     function hideTokenSetup() { $('tokenSetup').classList.add('hidden'); }
 
     function login() {
-        var pwd = $('pwd').value.trim();
-        if (!pwd) { loginErr('أدخل كلمة المرور'); return; }
+        var u = ($('username').value || '').trim(), p = $('pwd').value || '';
+        if (!u || !p) { loginErr('أدخل اسم المستخدم وكلمة المرور'); return; }
         loading(true, 'جارٍ التحقق...');
-        CMS.login(pwd).then(function (res) {
-            loading(false);
-            if (res && res.ok) {
-                $('loginErr').style.display = 'none'; hideTokenSetup();
-                try { sessionStorage.setItem(PASSWORD_HINT_KEY, pwd); } catch (e) { }
-                showApp();
-                return;
-            }
-            if (res && res.reason === 'token') { showTokenSetup(); return; }
-            loginErr('كلمة المرور غير صحيحة.');
-        }).catch(function () { loading(false); loginErr('تعذّر الاتصال، حاول مجدداً.'); });
+        loadUsers().then(function (data) {
+            usersData = data; var iter = data.iter || 100000;
+            var user = (data.users || []).filter(function (x) { return x.u === u; })[0];
+            if (!user) { loading(false); loginErr('بيانات الدخول غير صحيحة.'); return; }
+            pbkdf2Hex(p, user.salt, iter).then(function (h) {
+                if (h !== user.h) { loading(false); loginErr('بيانات الدخول غير صحيحة.'); return; }
+                currentUser = { u: user.u, name: user.name || user.u, role: user.role || 'news' };
+                if (CMS.requiresToken && !CMS.hasToken()) { loading(false); showTokenSetup(); return; }
+                CMS.checkToken().then(function (ok) {
+                    loading(false);
+                    if (ok) {
+                        $('loginErr').style.display = 'none'; hideTokenSetup();
+                        try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(currentUser)); } catch (e) { }
+                        showApp();
+                    } else { showTokenSetup(); }
+                });
+            });
+        }).catch(function () { loading(false); loginErr('تعذّر تحميل بيانات الدخول، حاول مجدداً.'); });
     }
     function saveTokenAndLogin() {
         var t = $('ghToken').value.trim();
@@ -82,7 +110,8 @@
         login();
     }
     function logout() {
-        try { sessionStorage.removeItem(PASSWORD_HINT_KEY); } catch (e) { }
+        try { sessionStorage.removeItem(PASSWORD_HINT_KEY); sessionStorage.removeItem(SESSION_KEY); } catch (e) { }
+        currentUser = null;
         location.reload();
     }
     // Called by storage.js when the GitHub token is rejected (401) at any time.
@@ -97,8 +126,27 @@
     function showApp() {
         $('login').classList.add('hidden');
         $('app').classList.remove('hidden');
+        applyRole();
         renderPages();
         loadData();
+    }
+    function activateTab(tab) {
+        document.querySelectorAll('.tab').forEach(function (x) { x.classList.toggle('active', x.getAttribute('data-tab') === tab); });
+        $('view-pages').classList.toggle('hidden', tab !== 'pages');
+        $('view-news').classList.toggle('hidden', tab !== 'news');
+        $('view-team').classList.toggle('hidden', tab !== 'team');
+        $('view-users').classList.toggle('hidden', tab !== 'users');
+        if (tab === 'users') renderUsers();
+    }
+    function applyRole() {
+        var isAdmin = currentUser && currentUser.role === 'admin';
+        document.querySelectorAll('.tab').forEach(function (t) {
+            var tab = t.getAttribute('data-tab');
+            t.classList.toggle('hidden', !(isAdmin || tab === 'news'));
+        });
+        var who = $('whoami');
+        if (who) who.innerHTML = '<i class="fas fa-user-circle"></i> ' + esc(currentUser ? currentUser.name : '') + ' • ' + (isAdmin ? 'مدير' : 'محرر أخبار');
+        activateTab(isAdmin ? 'pages' : 'news');
     }
 
     /* ---------- data load ---------- */
@@ -337,22 +385,61 @@
             .catch(function (e) { loading(false); toast('فشل الحفظ: ' + e.message, 'bad'); });
     }
 
+    /* ---------- users management (admin only) ---------- */
+    function saveUsersFile() {
+        return CMS.saveText('panel/users.json', JSON.stringify(usersData, null, 2) + '\n', 'Admin: update users');
+    }
+    function renderUsers() {
+        loadUsers().then(function (d) { usersData = d; drawUsers(); }).catch(function () { drawUsers(); });
+    }
+    function drawUsers() {
+        var list = $('usersList'), users = usersData.users || [];
+        list.innerHTML = users.map(function (x) {
+            var rl = x.role === 'admin' ? '👑 مدير (كل الصلاحيات)' : '📰 محرر أخبار';
+            var del = (x.u === 'admin' || (currentUser && x.u === currentUser.u)) ? ''
+                : '<button class="btn danger sm" data-deluser="' + esc(x.u) + '"><i class="fas fa-trash"></i> حذف</button>';
+            return '<div class="news-item"><div class="body" style="padding:16px;">'
+                + '<h3>' + esc(x.name || x.u) + '</h3>'
+                + '<div class="meta"><i class="fas fa-user"></i> ' + esc(x.u) + ' • ' + rl + '</div>'
+                + '<div class="row">' + del + '</div></div></div>';
+        }).join('');
+        list.querySelectorAll('[data-deluser]').forEach(function (b) { b.onclick = function () { delUser(b.getAttribute('data-deluser')); }; });
+    }
+    function addUser() {
+        var u = ($('nu_user').value || '').trim(), nm = ($('nu_name').value || '').trim(), p = $('nu_pass').value || '', role = $('nu_role').value;
+        if (!u || !p) { toast('أدخل اسم المستخدم وكلمة المرور', 'bad'); return; }
+        if (!/^[a-zA-Z0-9_.-]{2,}$/.test(u)) { toast('اسم المستخدم: حروف إنجليزية وأرقام فقط (حرفين على الأقل)', 'bad'); return; }
+        if ((usersData.users || []).some(function (x) { return x.u === u; })) { toast('اسم المستخدم موجود بالفعل', 'bad'); return; }
+        var salt = randSaltHex(), iter = usersData.iter || 100000;
+        loading(true, 'جارٍ إنشاء الحساب...');
+        pbkdf2Hex(p, salt, iter).then(function (h) {
+            (usersData.users || (usersData.users = [])).push({ u: u, name: nm || u, role: role, salt: salt, h: h });
+            saveUsersFile().then(function () {
+                loading(false); toast('تم إنشاء الحساب ✓ ' + CMS.publishDelayNote, 'ok');
+                $('nu_user').value = ''; $('nu_name').value = ''; $('nu_pass').value = ''; drawUsers();
+            }).catch(function (e) { loading(false); toast('فشل: ' + e.message, 'bad'); });
+        });
+    }
+    function delUser(u) {
+        if (u === 'admin') { toast('لا يمكن حذف حساب المدير الرئيسي', 'bad'); return; }
+        if (!confirm('حذف الحساب "' + u + '" نهائياً؟')) return;
+        usersData.users = (usersData.users || []).filter(function (x) { return x.u !== u; });
+        loading(true, 'جارٍ الحذف...');
+        saveUsersFile().then(function () { loading(false); drawUsers(); toast('تم حذف الحساب', 'ok'); })
+            .catch(function (e) { loading(false); toast('فشل: ' + e.message, 'bad'); });
+    }
+
     /* ---------- boot ---------- */
     document.addEventListener('DOMContentLoaded', function () {
         $('loginBtn').addEventListener('click', login);
         $('pwd').addEventListener('keydown', function (e) { if (e.key === 'Enter') login(); });
+        $('username').addEventListener('keydown', function (e) { if (e.key === 'Enter') login(); });
         $('logoutBtn').addEventListener('click', logout);
 
         document.querySelectorAll('.tab').forEach(function (t) {
-            t.addEventListener('click', function () {
-                document.querySelectorAll('.tab').forEach(function (x) { x.classList.remove('active'); });
-                t.classList.add('active');
-                var tab = t.getAttribute('data-tab');
-                $('view-pages').classList.toggle('hidden', tab !== 'pages');
-                $('view-news').classList.toggle('hidden', tab !== 'news');
-                $('view-team').classList.toggle('hidden', tab !== 'team');
-            });
+            t.addEventListener('click', function () { activateTab(t.getAttribute('data-tab')); });
         });
+        var addUserBtn = $('addUserBtn'); if (addUserBtn) addUserBtn.addEventListener('click', addUser);
 
         $('newPostBtn').addEventListener('click', function () { openPost(null); });
         $('closeModal').addEventListener('click', closePost);
@@ -385,12 +472,11 @@
         var st = $('saveTokenBtn'); if (st) st.addEventListener('click', saveTokenAndLogin);
         var gt = $('ghToken'); if (gt) gt.addEventListener('keydown', function (e) { if (e.key === 'Enter') saveTokenAndLogin(); });
 
-        // auto-login within the same browser session
-        var saved = null;
-        try { saved = sessionStorage.getItem(PASSWORD_HINT_KEY); } catch (e) { }
-        if (saved) {
-            $('pwd').value = saved;
-            CMS.login(saved).then(function (res) { if (res && res.ok) showApp(); });
+        // auto-login within the same browser session (token persists in localStorage)
+        var sess = null;
+        try { sess = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null'); } catch (e) { }
+        if (sess && CMS.hasToken()) {
+            CMS.checkToken().then(function (ok) { if (ok) { currentUser = sess; showApp(); } });
         }
     });
 })();
