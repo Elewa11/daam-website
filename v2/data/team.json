@@ -1,9 +1,44 @@
 {
   "members": [
-    { "id": "m1", "name_ar": "عبدالله مصطفى", "name_en": "Abdullah Mostafa", "role_ar": "", "role_en": "", "photo": "/assets/images/team_1.png" },
-    { "id": "m2", "name_ar": "باسنت العربي", "name_en": "Basant Elaraby", "role_ar": "", "role_en": "", "photo": "/assets/images/team_2.png" },
-    { "id": "m3", "name_ar": "مؤمن غانم", "name_en": "Moamen Ghanem", "role_ar": "", "role_en": "", "photo": "/assets/images/team_3.png" },
-    { "id": "m4", "name_ar": "نيهال محجوب", "name_en": "Nihal Mahgoub", "role_ar": "", "role_en": "", "photo": "/assets/images/team_1.png" },
-    { "id": "m5", "name_ar": "احمد إسماعيل", "name_en": "Ahmed Ismail", "role_ar": "", "role_en": "", "photo": "/assets/images/team_2.png" }
+    {
+      "id": "m1",
+      "name_ar": "عبدالله مصطفى",
+      "name_en": "Abdullah Mostafa",
+      "role_ar": "",
+      "role_en": "",
+      "photo": "/v2/uploads/1781959986679_uploaded_image_1769179643540.png"
+    },
+    {
+      "id": "m2",
+      "name_ar": "باسنت العربي",
+      "name_en": "Basant Elaraby",
+      "role_ar": "",
+      "role_en": "",
+      "photo": "/v2/uploads/1781959978380_logo_header.png"
+    },
+    {
+      "id": "m3",
+      "name_ar": "مؤمن غانم",
+      "name_en": "Moamen Ghanem",
+      "role_ar": "",
+      "role_en": "",
+      "photo": "/v2/uploads/1781959972418_logo_header.png"
+    },
+    {
+      "id": "m4",
+      "name_ar": "نيهال محجوب",
+      "name_en": "Nihal Mahgoub",
+      "role_ar": "",
+      "role_en": "",
+      "photo": "/v2/uploads/1781959960135_logo_header_new.png"
+    },
+    {
+      "id": "m5",
+      "name_ar": "احمد إسماعيل",
+      "name_en": "Ahmed Ismail",
+      "role_ar": "",
+      "role_en": "",
+      "photo": "/v2/uploads/1781959993540_daam_logo_about.png"
+    }
   ]
 }
