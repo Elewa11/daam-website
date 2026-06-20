@@ -142,3 +142,24 @@ img{max-width:100%;display:block}
 .ped-bar label.color{width:36px;height:36px;border:1px solid var(--line);border-radius:8px;display:inline-flex;align-items:center;justify-content:center;position:relative;overflow:hidden;background:#fff;cursor:pointer}
 .ped-bar label.color input{position:absolute;inset:0;opacity:0;cursor:pointer}
 #pedFrame{flex:1;width:100%;border:0;background:#fff}
+
+/* Login — professional polish (v2) */
+.login-screen{background:linear-gradient(135deg,#0b1f3a 0%,#00337a 55%,#004aad 100%);position:relative;overflow:hidden}
+.login-screen::before{content:"";position:absolute;width:540px;height:540px;border-radius:50%;background:radial-gradient(circle,rgba(255,174,0,.16),transparent 70%);top:-180px;inset-inline-end:-140px;pointer-events:none}
+.login-screen::after{content:"";position:absolute;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(31,157,87,.14),transparent 70%);bottom:-160px;inset-inline-start:-120px;pointer-events:none}
+.login-card{position:relative;z-index:1;padding:40px 38px}
+.login-badge{width:58px;height:58px;border-radius:17px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:1.45rem;margin-bottom:14px;box-shadow:0 10px 22px rgba(0,74,173,.4)}
+.login-card .logo{height:38px;margin:0 auto 16px}
+.login-card h1{font-size:1.4rem}
+.login-card p.sub{font-size:.95rem;line-height:1.6;margin-bottom:24px}
+.input-wrap{position:relative;display:flex;align-items:center}
+.input-wrap .pre{position:absolute;inset-inline-start:14px;color:var(--muted);font-size:.92rem;pointer-events:none}
+.input-wrap input{padding-inline-start:42px;padding-inline-end:42px}
+.toggle-pwd{position:absolute;inset-inline-end:8px;background:none;border:none;color:var(--muted);padding:8px;border-radius:8px;line-height:0}
+.toggle-pwd:hover{color:var(--primary);background:var(--bg-soft)}
+.login-foot{margin-top:24px;color:var(--muted);font-size:.82rem}
+.login-foot i{color:var(--secondary);margin-inline-end:4px}
+.token-setup .ts-note i{color:var(--primary);margin-inline-end:5px}
+.ts-help i{margin-inline-end:5px}
+.btn.full{box-shadow:0 8px 20px rgba(0,74,173,.22)}
+.btn.full.accent{box-shadow:0 8px 20px rgba(255,174,0,.28)}
