@@ -11,24 +11,24 @@
 
     // Editable site pages shown in the "صفحات الموقع" tab
     var PAGES_AR = [
-        { file: 'v2/index.html', label: 'الرئيسية', icon: 'fa-house' },
-        { file: 'v2/about.html', label: 'من نحن', icon: 'fa-circle-info' },
-        { file: 'v2/programs.html', label: 'برامجنا', icon: 'fa-layer-group' },
-        { file: 'v2/projects.html', label: 'مشروعاتنا', icon: 'fa-diagram-project' },
-        { file: 'v2/media.html', label: 'المركز الإعلامي', icon: 'fa-newspaper' },
-        { file: 'v2/participate.html', label: 'انضم إلينا', icon: 'fa-handshake-angle' },
-        { file: 'v2/contact.html', label: 'تواصل معنا', icon: 'fa-envelope' },
-        { file: 'v2/post.html', label: 'قالب صفحة الخبر', icon: 'fa-file-lines' }
+        { file: 'index.html', label: 'الرئيسية', icon: 'fa-house' },
+        { file: 'about/index.html', label: 'من نحن', icon: 'fa-circle-info' },
+        { file: 'programs/index.html', label: 'برامجنا', icon: 'fa-layer-group' },
+        { file: 'projects/index.html', label: 'مشروعاتنا', icon: 'fa-diagram-project' },
+        { file: 'media/index.html', label: 'المركز الإعلامي', icon: 'fa-newspaper' },
+        { file: 'participate/index.html', label: 'انضم إلينا', icon: 'fa-handshake-angle' },
+        { file: 'contact/index.html', label: 'تواصل معنا', icon: 'fa-envelope' },
+        { file: 'post/index.html', label: 'قالب صفحة الخبر', icon: 'fa-file-lines' }
     ];
     var PAGES_EN = [
-        { file: 'v2/en/index.html', label: 'Home', icon: 'fa-house' },
-        { file: 'v2/en/about.html', label: 'About', icon: 'fa-circle-info' },
-        { file: 'v2/en/programs.html', label: 'Programs', icon: 'fa-layer-group' },
-        { file: 'v2/en/projects.html', label: 'Projects', icon: 'fa-diagram-project' },
-        { file: 'v2/en/media.html', label: 'Media Center', icon: 'fa-newspaper' },
-        { file: 'v2/en/participate.html', label: 'Join Us', icon: 'fa-handshake-angle' },
-        { file: 'v2/en/contact.html', label: 'Contact', icon: 'fa-envelope' },
-        { file: 'v2/en/post.html', label: 'Post template', icon: 'fa-file-lines' }
+        { file: 'en/index.html', label: 'Home', icon: 'fa-house' },
+        { file: 'en/about/index.html', label: 'About', icon: 'fa-circle-info' },
+        { file: 'en/programs/index.html', label: 'Programs', icon: 'fa-layer-group' },
+        { file: 'en/projects/index.html', label: 'Projects', icon: 'fa-diagram-project' },
+        { file: 'en/media/index.html', label: 'Media Center', icon: 'fa-newspaper' },
+        { file: 'en/participate/index.html', label: 'Join Us', icon: 'fa-handshake-angle' },
+        { file: 'en/contact/index.html', label: 'Contact', icon: 'fa-envelope' },
+        { file: 'en/post/index.html', label: 'Post template', icon: 'fa-file-lines' }
     ];
 
     var state = {
