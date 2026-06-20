@@ -31,7 +31,10 @@
     /* ---------- mode + site URL detection ---------- */
     function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
 
-    var MODE = lsGet('cms_mode') || (location.hostname.indexOf('github.io') !== -1 ? 'github' : 'php');
+    // Hosting is GitHub Pages — true on *.github.io AND on a custom domain
+    // (e.g. daamfoundation.org), so default to 'github'. Switch to 'php' only
+    // after migrating to a real PHP server (set localStorage.cms_mode='php').
+    var MODE = lsGet('cms_mode') || 'github';
 
     function detectSiteURL() {
         var forced = lsGet('cms_site_url') || CONFIG.SITE_URL;
